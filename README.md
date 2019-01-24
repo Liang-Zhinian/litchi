@@ -1,2 +1,4 @@
-# litchi
-woocommerce plugin
+litchi
+==================
+
+A woocommerce plugin
