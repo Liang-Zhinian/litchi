@@ -60,14 +60,12 @@ class Litchi_API_Manager {
         $store = litchi()->vendor->get( $author_id );
         // $the_user = get_user_by( 'id', $author_id );;
 
-        $data['store_litchi'] = array(
+        $data['store'] = array(
             'id'        => $store->get_id(),
             'name'      => $store->get_name(),
             'shop_name' => $store->get_shop_name(),
             'url'       => $store->get_shop_url(),
-            'address'   => $store->get_address(),
-            'custom_prop'=> 'litchi',
-            'custom_prop_2'=> 'litchi2',
+            'address'   => $store->get_address()
         );
 
         $response->set_data( $data );
