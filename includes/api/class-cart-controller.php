@@ -48,6 +48,7 @@ class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
      * @return void
      */
     public function register_routes() {
+        // GET: /wp-json/litchi/v1/cart
         register_rest_route( $this->namespace, '/' . $this->base, array(
             'methods'  => WP_REST_Server::READABLE,
 			'callback' => array( $this, 'get_cart' ),
@@ -112,23 +113,49 @@ class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
 	 * @return  WP_REST_Response
 	 */
 	public function get_cart( $data = array() ) {
-		$cart = WC()->cart->get_cart();
-		// if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
-		// 	return new WP_REST_Response( array(), 200 );
-		// }
-		$show_thumb = ! empty( $data['thumb'] ) ? $data['thumb'] : false;
+        $cart = WC()->cart->get_cart();
+        
+		if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
+			return new WP_REST_Response( array(), 200 );
+        }
+        
+        $show_thumb = ! empty( $data['thumb'] ) ? $data['thumb'] : false;
+        
 		foreach ( $cart as $item_key => $cart_item ) {
-			$_product = apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
+            $_product = apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
+            
 			// Adds the product name as a new variable.
-			$cart[$item_key]['product_name'] = $_product->get_name();
+            $cart[$item_key]['product_name'] = $_product->get_name();
+            
 			// If main product thumbnail is requested then add it to each item in cart.
 			if ( $show_thumb ) {
 				$thumbnail_id = apply_filters( 'wc_cart_rest_api_cart_item_thumbnail', $_product->get_image_id(), $cart_item, $item_key );
-				$thumbnail_src = wp_get_attachment_image_src( $thumbnail_id, 'woocommerce_thumbnail' );
+                $thumbnail_src = wp_get_attachment_image_src( $thumbnail_id, 'woocommerce_thumbnail' );
+                
 				// Add main product image as a new variable.
-				$cart[$item_key]['product_image'] = esc_url( $thumbnail_src[0] );
-			}
-		}
+                $cart[$item_key]['product_image'] = esc_url( $thumbnail_src[0] );
+            }
+            
+            $cart[$item_key]['customer'] = WC()->cart->get_customer();
+        }
+        
 		return new WP_REST_Response( $cart, 200 );
-	} // END get_cart()
+    } // END get_cart()
+    
+	/**
+	 * Get cart contents count.
+	 *
+	 * @access public
+	 * @since  1.0.0
+	 * @param  array $data
+	 * @return string|WP_REST_Response
+	 */
+	public function get_cart_contents_count( $data = array() ) {
+		$count = WC()->cart->get_cart_contents_count();
+		$return = ! empty( $data['return'] ) ? $data['return'] : '';
+		if ( $return != 'numeric' && $count <= 0 ) {
+			return new WP_REST_Response( __( 'There are no items in the cart!', 'litchi' ), 200 );
+		}
+		return $count;
+	} // END get_cart_contents_count()
 }
