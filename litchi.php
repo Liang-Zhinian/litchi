@@ -88,6 +88,7 @@ if(!class_exists('Litchi'))
 			// Register custom post types
 			require_once(sprintf("%s/post-types/post_type_template.php", dirname(__FILE__)));
 			$Post_Type_Template = new Post_Type_Template();
+			
 		} // END public function __construct
 
 		/**
