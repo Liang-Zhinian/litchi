@@ -254,9 +254,13 @@ class Litchi_Vendor {
      * @return string
      */
     public function get_shop_name() {
-        // return $this->get_info_part( 'store_name' );
+        $store_name = $this->get_info_part( 'store_name' );
 
-        return get_user_meta( $this->id, 'store_name', true );
+        if (! $store_name) {
+            $store_name = get_user_meta( $this->id, 'store_name', true );
+        }
+
+        return $store_name;
     }
 
     /**
@@ -351,7 +355,15 @@ class Litchi_Vendor {
      * @return array
      */
     public function get_address() {
-        return $this->get_info_part( 'address' );
+        // return $this->get_info_part( 'address' );
+        return array(
+            'address1'  => get_user_meta( $this->id, '_wcfm_street_1', true ),
+            'address2'  => get_user_meta( $this->id, '_wcfm_street_2', true ),
+            'city'      => get_user_meta( $this->id, '_wcfm_city', true ),
+            'zip'       => get_user_meta( $this->id, '_wcfm_zip', true ),
+            'country'   => get_user_meta( $this->id, '_wcfm_country', true ),
+            'state'     => get_user_meta( $this->id, '_wcfm_state', true ),
+        );
     }
 
     /**
