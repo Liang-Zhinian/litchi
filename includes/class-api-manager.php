@@ -36,6 +36,8 @@ class Litchi_API_Manager {
         add_filter( 'woocommerce_rest_prepare_customer', array( $this, 'prepeare_customer_response' ), 10, 3 );
         
         
+        add_filter( 'pre_get_posts', 'my_modify_main_query' );
+        add_filter( 'woocommerce_product_data_store_cpt_get_products_query', 'handle_custom_query_var', 10, 2 );
     }
 
     /**
@@ -124,5 +126,41 @@ class Litchi_API_Manager {
 
         $response->set_data( $data );
         return $response;
+    }
+
+    function my_modify_main_query( $query ) {
+
+        // Checking for "city" data
+        if( ! isset( $_GET['city'] ) ) return $query;
+
+        $meta_query_args = array(
+            'meta_query' => array(
+                array(
+                    'key' => '_city_name',
+                    'value' => sanitize_text_field( $_GET['city'] ),
+                    'compare' => 'LIKE',
+                )
+            )
+        );
+        $query->set('meta_query', $meta_query_args);
+
+        return $query; ## <==== This was missing
+    }
+
+    /**
+     * Handle a custom 'customvar' query var to get products with the 'customvar' meta.
+     * @param array $query - Args for WP_Query.
+     * @param array $query_vars - Query vars from WC_Product_Query.
+     * @return array modified $query
+     */
+    function handle_custom_query_var( $query, $query_vars ) {
+        if ( ! empty( $query_vars['post_author'] ) ) {
+            $query['meta_query'][] = array(
+                'key' => 'post_author',
+                'value' => esc_attr( $query_vars['post_author'] ),
+            );
+        }
+
+        return $query;
     }
 }
