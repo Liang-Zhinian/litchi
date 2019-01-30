@@ -33,6 +33,8 @@ class Litchi_API_Manager {
         add_action( 'rest_api_init', array( $this, 'register_rest_routes' ), 10 );
         add_filter( 'woocommerce_rest_prepare_product_object', array( $this, 'prepeare_product_response' ), 10, 3 );
         add_filter( 'woocommerce_api_product_response', array( $this, 'filter_woocommerce_api_product_response' ), 10, 4 );
+        add_filter( 'woocommerce_rest_prepare_customer', array( $this, 'prepeare_customer_response' ), 10, 3 );
+        
         
     }
 
@@ -90,6 +92,29 @@ class Litchi_API_Manager {
         // $the_user = get_user_by( 'id', $author_id );;
 
         $data['store'] = array(
+            'id'        => $store->get_id(),
+            'name'      => $store->get_name(),
+            'shop_name' => $store->get_shop_name(),
+            'url'       => $store->get_shop_url(),
+            'address'   => $store->get_address()
+        );
+
+        $response->set_data( $data );
+        return $response;
+    }
+
+    /**
+     * Prepare object for product response
+     *
+     * @since 2.8.0
+     *
+     * @return void
+     */
+    public function prepeare_customer_response( $response, $object, $request ) {
+        $data = $response->get_data();
+        
+
+        $data['cart'] = array(
             'id'        => $store->get_id(),
             'name'      => $store->get_name(),
             'shop_name' => $store->get_shop_name(),

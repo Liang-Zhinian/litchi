@@ -254,7 +254,9 @@ class Litchi_Vendor {
      * @return string
      */
     public function get_shop_name() {
-        return $this->get_info_part( 'store_name' );
+        // return $this->get_info_part( 'store_name' );
+
+        return get_user_meta( $this->id, 'store_name', true );
     }
 
     /**
