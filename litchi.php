@@ -250,6 +250,8 @@ if(!class_exists('Litchi'))
 			// API includes
 			require_once $inc_dir . 'api/class-api-rest-controller.php';
 			require_once $inc_dir . 'class-api-manager.php';
+
+			require_once $inc_dir . 'basic-auth.php';
 		}
 
 		/**
