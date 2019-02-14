@@ -253,7 +253,6 @@ if(!class_exists('Litchi'))
 
 			require_once $inc_dir . 'basic-auth.php';
 
-			require_once $inc_dir . 'wp-api-social-login/api-social-login.php';
 		}
 
 		/**

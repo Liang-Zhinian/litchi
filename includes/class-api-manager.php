@@ -26,6 +26,7 @@ class Litchi_API_Manager {
             // LITCHI_DIR . '/includes/api/class-store-controller.php'                   => 'Litchi_REST_Store_Controller',
             // LITCHI_DIR . '/includes/api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',
             LITCHI_DIR . '/includes/api/class-cart-controller.php'                 => 'Litchi_REST_Product_Controller',
+            LITCHI_DIR . '/includes/api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
             
         ) );
 
