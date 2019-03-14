@@ -430,13 +430,14 @@ function my_modify_main_query( $query ) {
     }
 
     // Average rating filter
-    if ( ! empty( $request['average_rating'] ) ) {
-        $meta_query_args = add_meta_query( $meta_query_args, array(
+    if ( ! empty( $request['min_average_rating'] ) || ! empty( $request['max_average_rating'] ) ) {
+        $average_rating_meta_query = add_meta_query( $meta_query_args, array(
             'key' => '_average_rating',
             'value'   => array( $request['min_average_rating'], $request['max_average_rating'] ),
             'compare' => 'BETWEEN',
             'type'    => 'DECIMAL(10,' . wc_get_price_decimals() . ')',
         ) );  // WPCS: slow query ok.
+        $meta_query_args = add_meta_query( $meta_query_args, $average_rating_meta_query );  // WPCS: slow query ok.
     }
     
     
