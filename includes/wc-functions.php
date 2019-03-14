@@ -428,6 +428,17 @@ function my_modify_main_query( $query ) {
         my_log_file($price_meta_query, 'my_modify_main_query: $price_meta_query');
         $meta_query_args = add_meta_query( $meta_query_args, $price_meta_query );  // WPCS: slow query ok.
     }
+
+    // Average rating filter
+    if ( ! empty( $request['average_rating'] ) ) {
+        $meta_query_args = add_meta_query( $meta_query_args, array(
+            'key' => '_average_rating',
+            'value'   => array( $request['min_average_rating'], $request['max_average_rating'] ),
+            'compare' => 'BETWEEN',
+            'type'    => 'DECIMAL(10,' . wc_get_price_decimals() . ')',
+        ) );  // WPCS: slow query ok.
+    }
+    
     
     $query->set('meta_query', $meta_query_args);
     my_log_file($query, 'my_modify_main_query: $query _after');

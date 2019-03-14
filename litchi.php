@@ -186,8 +186,8 @@ if(!class_exists('Litchi'))
 			// require_once dirname( __FILE__ ) . '/includes/background-processes/class-dokan-background-processes.php';
 			// require_once dirname( __FILE__ ) . '/includes/background-processes/abstract-class-dokan-background-processes.php';
 
-			$installer = new Litchi_Installer();
-			$installer->do_install();
+			//$installer = new Litchi_Installer();
+			//$installer->do_install();
 		} // END public static function activate
 
 		/**
@@ -278,7 +278,7 @@ if(!class_exists('Litchi'))
 			require_once $inc_dir . 'api/class-api-rest-controller.php';
 			require_once $inc_dir . 'class-api-manager.php';
 
-			require_once $inc_dir . 'basic-auth.php';
+			//require_once $inc_dir . 'basic-auth.php';
 
 		}
 
