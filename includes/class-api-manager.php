@@ -27,6 +27,7 @@ class Litchi_API_Manager {
             // LITCHI_DIR . '/includes/api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',
             LITCHI_DIR . '/includes/api/class-cart-controller.php'                 => 'Litchi_REST_Product_Controller',
             LITCHI_DIR . '/includes/api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
+            LITCHI_DIR . '/includes/api/class-customer-controller.php'                 => 'Litchi_REST_Social_Controller',
             
         ) );
 
@@ -117,13 +118,13 @@ class Litchi_API_Manager {
         $data = $response->get_data();
         
 
-        $data['cart'] = array(
-            'id'        => $store->get_id(),
-            'name'      => $store->get_name(),
-            'shop_name' => $store->get_shop_name(),
-            'url'       => $store->get_shop_url(),
-            'address'   => $store->get_address()
-        );
+        // $data['cart'] = array(
+        //     'id'        => $store->get_id(),
+        //     'name'      => $store->get_name(),
+        //     'shop_name' => $store->get_shop_name(),
+        //     'url'       => $store->get_shop_url(),
+        //     'address'   => $store->get_address()
+        // );
 
         $response->set_data( $data );
         return $response;
