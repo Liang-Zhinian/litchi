@@ -143,12 +143,13 @@ class Litchi_REST_Customer_Controller extends WP_REST_Controller {
 	 * @return WP_Error|boolean
 	 */
 	public function get_items_permissions_check( $request ) {
-		// if ( ! wc_rest_check_user_permissions( 'read' ) ) {
-		// 	return new WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'woocommerce' ), array( 'status' => rest_authorization_required_code() ) );
-		// }
+		if ( ! wc_rest_check_user_permissions( 'read' ) ) {
+			return new WP_Error( 'woocommerce_rest_cannot_view', __( 'Sorry, you cannot list resources.', 'woocommerce' ), array( 'status' => rest_authorization_required_code() ) );
+		}
 
 		return true;
 
+		// return current_user_can( 'list_users' );
 		// return current_user_can( 'litchi_view_user' );
 		// return current_user_can( 'litchi_view_product_menu' );
 	}

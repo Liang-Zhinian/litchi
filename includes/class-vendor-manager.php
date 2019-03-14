@@ -35,10 +35,11 @@ class Litchi_Vendor_Manager {
      * @return array
      */
     public function get_vendors( $args = array() ) {
+        global $WCFM;
         $vendors = array();
 
         $defaults = array(
-            'role__in'   => array( 'seller', 'administrator' ),
+        'role__in'   => array( 'wcfm_vendor'/*, 'seller', 'administrator'*/ ),
             'number'     => 10,
             'offset'     => 0,
             'orderby'    => 'registered',
@@ -56,24 +57,24 @@ class Litchi_Vendor_Manager {
             $status = $args['status'];
         }
 
-        if ( in_array( $status, array( 'approved', 'pending' ) ) ) {
-            $operator = ( $status == 'approved' ) ? '=' : '!=';
+        // if ( in_array( $status, array( 'approved', 'pending' ) ) ) {
+        //     $operator = ( $status == 'approved' ) ? '=' : '!=';
 
-            $args['meta_query'][] = array(
-                'key'     => 'dokan_enable_selling',
-                'value'   => 'yes',
-                'compare' => $operator
-            );
-        }
+        //     $args['meta_query'][] = array(
+        //         'key'     => 'dokan_enable_selling',
+        //         'value'   => 'yes',
+        //         'compare' => $operator
+        //     );
+        // }
 
         // if featured
-        if ( 'yes' == $args['featured'] ) {
-            $args['meta_query'][] = array(
-                'key'     => 'dokan_feature_seller',
-                'value'   => 'yes',
-                'compare' => '='
-            );
-        }
+        // if ( 'yes' == $args['featured'] ) {
+        //     $args['meta_query'][] = array(
+        //         'key'     => 'dokan_feature_seller',
+        //         'value'   => 'yes',
+        //         'compare' => '='
+        //     );
+        // }
 
         unset( $args['status'] );
         unset( $args['featured'] );

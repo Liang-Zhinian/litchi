@@ -30,6 +30,8 @@ abstract class Litchi_REST_Controller extends WP_REST_Controller {
         $query        = new WP_Query();
         $result       = $query->query( $query_args );
 
+        // my_log_file($result);
+        
         $data         = array();
         $data_objects = array();
         $objects      = array_map( array( $this, 'get_object' ), $result );

@@ -47,6 +47,8 @@ class Litchi_Vendor {
             $this->id   = $vendor->ID;
             $this->data = $vendor;
         }
+
+        do_action( 'litchi_vendor', $this );
     }
 
     /**
@@ -101,13 +103,13 @@ class Litchi_Vendor {
             'store_toc'             => $this->get_toc(),
             'featured'              => $this->is_featured(),
             'rating'                => $this->get_rating(),
-            'enabled'               => $this->is_enabled(),
+            // 'enabled'               => $this->is_enabled(), // error
             'registered'            => $this->get_register_date(),
             'payment'               => $this->get_payment_profiles(),
-            'trusted'               => $this->is_trusted(),
+            // 'trusted'               => $this->is_trusted(), // error
         );
 
-        return apply_filters( 'dokan_vendor_to_array', $data, $this );
+        return apply_filters( 'litchi_vendor_to_array', $data, $this );
     }
 
     /**

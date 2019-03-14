@@ -48,23 +48,23 @@ class Litchi_REST_Store_Controller extends WP_REST_Controller {
                 'methods'  => WP_REST_Server::READABLE,
                 'callback' => array( $this, 'get_store' )
             ),
-            array(
-                'methods'  => WP_REST_Server::DELETABLE,
-                'callback' => array( $this, 'delete_store' ),
-                'permission_callback' => array( $this, 'permission_check_for_manageable_part' ),
-                'args' =>  array(
-                    'reassign' => array(
-                        'type'        => 'integer',
-                        'description' => __( 'Reassign the deleted user\'s posts and links to this user ID.', 'litchi' ),
-                        'required'    => true,
-                    ),
-                )
-            ),
-            array(
-                'methods'             => WP_REST_Server::EDITABLE,
-                'callback'            => array( $this, 'update_store' ),
-                'permission_callback' => array( $this, 'update_product_permissions_check' ),
-            ),
+            // array(
+            //     'methods'  => WP_REST_Server::DELETABLE,
+            //     'callback' => array( $this, 'delete_store' ),
+            //     'permission_callback' => array( $this, 'permission_check_for_manageable_part' ),
+            //     'args' =>  array(
+            //         'reassign' => array(
+            //             'type'        => 'integer',
+            //             'description' => __( 'Reassign the deleted user\'s posts and links to this user ID.', 'litchi' ),
+            //             'required'    => true,
+            //         ),
+            //     )
+            // ),
+            // array(
+            //     'methods'             => WP_REST_Server::EDITABLE,
+            //     'callback'            => array( $this, 'update_store' ),
+            //     'permission_callback' => array( $this, 'update_product_permissions_check' ),
+            // ),
         ) );
 
         register_rest_route( $this->namespace, '/' . $this->base . '/(?P<id>[\d]+)/products' , array(

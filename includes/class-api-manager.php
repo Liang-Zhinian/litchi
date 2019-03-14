@@ -23,11 +23,11 @@ class Litchi_API_Manager {
         // require_once LITCHI_DIR . '/includes/api/admin/class-admin-controller.php';
 
         $this->class_map = apply_filters( 'litchi_rest_api_class_map', array(
-            // LITCHI_DIR . '/includes/api/class-store-controller.php'                   => 'Litchi_REST_Store_Controller',
+            LITCHI_DIR . '/includes/api/class-store-controller.php'                   => 'Litchi_REST_Store_Controller',
             // LITCHI_DIR . '/includes/api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',
             LITCHI_DIR . '/includes/api/class-cart-controller.php'                 => 'Litchi_REST_Product_Controller',
             LITCHI_DIR . '/includes/api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
-            LITCHI_DIR . '/includes/api/class-customer-controller.php'                 => 'Litchi_REST_Social_Controller',
+            LITCHI_DIR . '/includes/api/class-customer-controller.php'                 => 'Litchi_REST_Customer_Controller',
             
         ) );
 
@@ -35,11 +35,11 @@ class Litchi_API_Manager {
         add_action( 'rest_api_init', array( $this, 'register_rest_routes' ), 10 );
         add_filter( 'woocommerce_rest_prepare_product_object', array( $this, 'prepeare_product_response' ), 10, 3 );
         add_filter( 'woocommerce_api_product_response', array( $this, 'filter_woocommerce_api_product_response' ), 10, 4 );
-        add_filter( 'woocommerce_rest_prepare_customer', array( $this, 'prepeare_customer_response' ), 10, 3 );
+        // add_filter( 'woocommerce_rest_prepare_customer', array( $this, 'prepeare_customer_response' ), 10, 3 );
         
         
-        add_filter( 'pre_get_posts', 'my_modify_main_query' );
-        add_filter( 'woocommerce_product_data_store_cpt_get_products_query', 'handle_custom_query_var', 10, 2 );
+        // add_filter( 'pre_get_posts', 'my_modify_main_query' );
+        // add_filter( 'woocommerce_product_data_store_cpt_get_products_query', 'handle_custom_query_var', 10, 2 );
     }
 
     /**

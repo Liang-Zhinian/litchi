@@ -6,6 +6,10 @@ Description: A simple wordpress plugin template
 Version: 1.0
 Author: 
 Author URI: 
+Text Domain: litchi
+WC requires at least: 3.0
+WC tested up to: 3.5.5
+Domain Path: /languages/
 License: GPL2
 */
 
@@ -161,6 +165,29 @@ if(!class_exists('Litchi'))
 		public function activate()
 		{
 			// Do nothing
+			// if ( ! function_exists( 'WC' ) ) {
+			// 	require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+			// 	deactivate_plugins( plugin_basename( __FILE__ ) );
+
+			// 	wp_die( '<div class="error"><p>' . sprintf( esc_html__( '<b>Dokan</b> requires <a href="%s">WooCommerce</a> to be installed & activated!', 'dokan-lite' ), '<a target="_blank" href="https://wordpress.org/plugins/woocommerce/">', '</a>' ) . '</p></div>' );
+			// }
+
+			// if ( ! $this->is_supported_php() ) {
+			// 	require_once WC_ABSPATH . 'includes/wc-notice-functions.php';
+
+			// 	wc_print_notice( sprintf( __( 'The Minimum PHP Version Requirement for <b>Dokan</b> is %s. You are Running PHP %s', 'dokan' ), $this->min_php, phpversion(), 'error' ) );
+			// 	exit;
+			// }
+
+			require_once dirname( __FILE__ ) . '/includes/functions.php';
+			// require_once dirname( __FILE__ ) . '/includes/functions-compatibility.php';
+
+			// Background Processes
+			// require_once dirname( __FILE__ ) . '/includes/background-processes/class-dokan-background-processes.php';
+			// require_once dirname( __FILE__ ) . '/includes/background-processes/abstract-class-dokan-background-processes.php';
+
+			$installer = new Litchi_Installer();
+			$installer->do_install();
 		} // END public static function activate
 
 		/**
