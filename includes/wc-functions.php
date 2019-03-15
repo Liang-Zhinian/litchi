@@ -406,7 +406,7 @@ function my_modify_main_query( $query ) {
     }
 
     $request = $_GET['filter'];
-    my_log_file($request, 'my_modify_main_query: $request');
+    // my_log_file($request, 'my_modify_main_query: $request');
 
     // Price filter.
 
@@ -418,6 +418,10 @@ function my_modify_main_query( $query ) {
         ) );  // WPCS: slow query ok.
     }
 
+    $price_decimals = wc_get_price_decimals();
+    // my_log_file($price_decimals, 'my_modify_main_query: $price_decimals');
+
+
     if ( ! empty( $request['min_price'] ) || ! empty( $request['max_price'] ) ) {
         $price_meta_query = array(
             'key'     => '_price',
@@ -425,24 +429,26 @@ function my_modify_main_query( $query ) {
             'compare' => 'BETWEEN',
             'type'    => 'DECIMAL(10,' . wc_get_price_decimals() . ')',
         );
-        my_log_file($price_meta_query, 'my_modify_main_query: $price_meta_query');
-        $meta_query_args = add_meta_query( $meta_query_args, $price_meta_query );  // WPCS: slow query ok.
+        // my_log_file($price_meta_query, 'my_modify_main_query: $price_meta_query');
+        $meta_query_args['meta_query'] = add_meta_query( $meta_query_args, $price_meta_query );  // WPCS: slow query ok.
     }
+    my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _price');
 
     // Average rating filter
     if ( ! empty( $request['min_average_rating'] ) || ! empty( $request['max_average_rating'] ) ) {
-        $average_rating_meta_query = add_meta_query( $meta_query_args, array(
-            'key' => '_average_rating',
+        $average_rating_meta_query = array(
+            'key' => '_wc_average_rating',
             'value'   => array( $request['min_average_rating'], $request['max_average_rating'] ),
             'compare' => 'BETWEEN',
-            'type'    => 'DECIMAL(10,' . wc_get_price_decimals() . ')',
-        ) );  // WPCS: slow query ok.
-        $meta_query_args = add_meta_query( $meta_query_args, $average_rating_meta_query );  // WPCS: slow query ok.
+            'type'    => 'DECIMAL(2,2)',
+        );  // WPCS: slow query ok.
+        // my_log_file($average_rating_meta_query, 'my_modify_main_query: $average_rating_meta_query');
+        $meta_query_args['meta_query'] = add_meta_query( $meta_query_args, $average_rating_meta_query );  // WPCS: slow query ok.
     }
     
     
-    $query->set('meta_query', $meta_query_args);
-    my_log_file($query, 'my_modify_main_query: $query _after');
+    my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _final');
+    $query->set('meta_query', $meta_query_args['meta_query']);
 
     return $query; ## <==== This was missing
 }
