@@ -5,12 +5,15 @@ defined( 'ABSPATH' ) || exit;
 
 add_filter( 'pre_get_posts', 'my_modify_main_query' );
 function my_modify_main_query( $query ) {
+    // my_log_file($query, 'my_modify_main_query: $query _before');
     
 
-    $meta_query_args = $query->get('meta_query'); //array();
+    $meta_query_args = $query->query; //array();
+    // my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _before');
     if ( empty( $meta_query_args ) ) {
         $meta_query_args = array();
     }
+    // my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _before');
 
     $request = $_GET['filter'];
     // my_log_file($request, 'my_modify_main_query: $request');
@@ -38,9 +41,9 @@ function my_modify_main_query( $query ) {
         // );
         $meta_query_args['meta_query'] = add_meta_query( $meta_query_args, wc_get_min_max_price_meta_query( $request ) );  // WPCS: slow query ok.
         // my_log_file($price_meta_query, 'my_modify_main_query: $price_meta_query');
-        $meta_query_args['meta_query'] = add_meta_query( $meta_query_args, $price_meta_query );  // WPCS: slow query ok.
+        // $meta_query_args['meta_query'] = add_meta_query( $meta_query_args, $price_meta_query );  // WPCS: slow query ok.
     }
-    my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _price');
+    // my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _price');
 
     // Average rating filter
     if ( ! empty( $request['min_average_rating'] ) || ! empty( $request['max_average_rating'] ) ) {
@@ -55,7 +58,7 @@ function my_modify_main_query( $query ) {
     }
     
     
-    my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _final');
+    // my_log_file($meta_query_args, 'my_modify_main_query: $meta_query_args _final');
     $query->set('meta_query', $meta_query_args['meta_query']);
 
     return $query; ## <==== This was missing
