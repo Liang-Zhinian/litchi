@@ -8,7 +8,7 @@
 * @author 
 */
 
-class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
+class Litchi_REST_Product_Controller extends WP_REST_Controller {
 
     /**
      * Endpoint namespace
@@ -49,12 +49,22 @@ class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
      */
     public function register_routes() {
         // GET: /wp-json/litchi/v1/cart
-        register_rest_route( $this->namespace, '/' . $this->base, array(
-            'methods'  => WP_REST_Server::READABLE,
-			'callback' => array( $this, 'get_cart' ),
-			'args'     => array(
+        register_rest_route( $this->namespace, '/customers'.'/(?P<id>[\d]+)/' . $this->base, array(
+			'args' => array(
+				'id' => array(
+					'description' => __( 'Unique identifier for the resource.', 'woocommerce' ),
+					'type'        => 'integer',
+				),
 				'thumb' => array(
 					'default' => null
+				),
+			),
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_cart' ),
+				// 'permission_callback' => array( $this, 'get_item_permissions_check' ),
+				'args'                => array(
+					'context' => $this->get_context_param( array( 'default' => 'view' ) ),
 				),
 			),
         ) );
@@ -109,20 +119,30 @@ class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
 	 * @access  public
 	 * @since   1.0.0
 	 * @version 1.0.6
-	 * @param   array $data
+	 * @param   array $request
 	 * @return  WP_REST_Response
 	 */
-	public function get_cart( $data = array() ) {
-        $cart = WC()->cart->get_cart();
+	public function get_cart( $request = array() ) {
+		$id        = (int) $request['id'];
+		$user_data = get_userdata( $id );
+
+		if ( empty( $id ) || empty( $user_data->ID ) ) {
+			return new WP_Error( 'woocommerce_rest_invalid_id', __( 'Invalid resource ID.', 'woocommerce' ), array( 'status' => 404 ) );
+		}
+		$customer    = new WC_Customer( $user_data->ID );
+        // $cart = WC()->cart->get_cart();
+        $cart = get_user_meta( $user_data->ID, '_woocommerce_persistent_cart_' . get_current_blog_id(), true )['cart'];
         
-		if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
-			return new WP_REST_Response( array(), 200 );
-        }
+		// if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
+		// 	return new WP_REST_Response( array(), 200 );
+        // }
         
-        $show_thumb = ! empty( $data['thumb'] ) ? $data['thumb'] : false;
+        $show_thumb = ! empty( $request['thumb'] ) ? $request['thumb'] : false;
         
 		foreach ( $cart as $item_key => $cart_item ) {
-            $_product = apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
+            my_log_file($item_key, 'get_cart: $item_key');
+            my_log_file($cart_item, 'get_cart: $cart_item');
+            $_product = wc_get_product($cart_item['product_id']); //apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
             
 			// Adds the product name as a new variable.
             $cart[$item_key]['product_name'] = $_product->get_name();
@@ -136,7 +156,7 @@ class Litchi_REST_Product_Controller extends Litchi_REST_Controller {
                 $cart[$item_key]['product_image'] = esc_url( $thumbnail_src[0] );
             }
             
-            $cart[$item_key]['customer'] = WC()->cart->get_customer();
+        //     $cart[$item_key]['customer'] = $customer;
         }
         
 		return new WP_REST_Response( $cart, 200 );

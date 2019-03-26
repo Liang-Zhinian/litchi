@@ -120,9 +120,11 @@ function get_customerMeta( $data, $field_name, $request ) {
 };
 
 function update_customerMeta($value,$data,$field_name) {
+    
+    $schema = get_shipping_schema();
     // Customer shipping address.
-    foreach ( array_keys( additional_shipping_fields() ) as $additional_field ) {
-        update_user_meta( $data->ID, $field_name.'_'.$additional_field, sanitize_text_field( $value[$additional_field] ) );
+    foreach ( array_keys( $schema['properties'] ) as $field ) {
+        update_user_meta( $data->ID, $field_name.'_'.$field, sanitize_text_field( $value[$field] ) );
     }
 
 };
@@ -162,7 +164,7 @@ function update_customerShippingListMeta($value,$data,$field_name) {
 
 };
 
-// add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
+add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
 /**
  * Add extra fields in customers response.
  *
@@ -173,16 +175,25 @@ function update_customerShippingListMeta($value,$data,$field_name) {
  */
 function prepare_customers_response( $response/*, $user, $request*/ ) {
     $data = $response->get_data();
+    // my_log_file($data['id'], 'prepare_customers_response: $data[\'id\']');
 
-    $customer = new WC_Customer( $data['id'] );
+    // $customer = new WC_Customer( $data['id'] );
     // WooCommerce 3.0 or later.
-    if ( method_exists( $customer, 'get_meta' ) ) {
-        // Shipping fields.
-        $response->data['shipping']['phone']       = $customer->get_meta( 'shipping_phone' );
-    } else {
-        // Shipping fields.
-        $response->data['shipping']['phone']       = $customer->shipping_phone;
-    }
+    // if ( method_exists( $customer, 'get_meta' ) ) {
+    //     // Shopping cart fields.
+    //     // _woocommerce_persistent_cart_1
+    //     $response->data['cart']       = $customer->get_meta( '_woocommerce_persistent_cart_1' );
+    // } else {
+    //     //  Shopping cart fields.
+    //     $response->data['cart']       = $customer->cart;
+    // }
+
+    $cart = get_user_meta( $data[ 'id' ], '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
+    // foreach ($cart as $addr) {
+    //     $shipping[] = get_shipping_address($addr);
+    // }
+
+    $response->data['cart']       =  $cart; //['cart'];
 
     // $response->set_data( $data );
     return $response;
