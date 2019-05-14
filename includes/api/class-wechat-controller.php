@@ -65,7 +65,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 				'total_fee' => array(
 					'description' => __( '总金额', 'woocommerce' ),
                     'required' => true,
-                    'type'     => 'string',
+                    'type'     => 'float',
 				),
 				// 'attach' => array(
 				// 	'description' => __( '商品描述', 'woocommerce' ),
@@ -115,7 +115,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                 'body'             => $params['body'],//商品名
                 'out_trade_no'     => $params['out_trade_no'],//订单号
                 // 'total_fee'     => $need_info['price_total'] * 100,//价格，分
-                'total_fee'     => 1,
+                'total_fee'     => $params['total_fee'] * 100,
                 // 'attach'         => $params['attach'],
                 'notify_url'     => 'http://192.168.0.194:8080/wordpress/wp-json/litchi/v1/wx/test', //异步通知页面url
             );
