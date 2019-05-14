@@ -34,6 +34,7 @@
             $xml_str =  $this->_postXmlCurl($xml_str,self::URL);
             $array = XMLDataParse($xml_str);
             $array['timeStamp'] = time();
+            $array['sign']     = $this->_makeSign();
 
             return $array;
         }
@@ -72,7 +73,8 @@
 
             $this->_config         =  $this->_sortConfig($tmp_config);
 
-            $this->_makeSign();
+            
+            $this->_config['sign']     = $this->_makeSign();
             
         }
 
@@ -120,7 +122,9 @@
             //md5 加密，并转为大写
             $sign_info                  = strtoupper(md5($str_config));
 
-            $this->_config['sign']     = $sign_info;
+            return $sign_info;
+
+            //$this->_config['sign']     = $sign_info;
         }
         /*
         private function _makeSign() { 
