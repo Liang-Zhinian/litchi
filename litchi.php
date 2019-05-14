@@ -279,6 +279,8 @@ if(!class_exists('Litchi'))
 			require_once $inc_dir . 'class-api-manager.php';
 
 			//require_once $inc_dir . 'basic-auth.php';
+			
+			require_once $inc_dir . 'class-wechat.php';
 
 		}
 
