@@ -29,12 +29,44 @@
             $xml_str             .= '</xml>';
             //$xml_str = $this -> _arrayToXml($this->_config);
             
-            my_log_file($xml_str, 'Litchi_WeChat->run: $xml_str');
 
             $xml_str =  $this->_postXmlCurl($xml_str,self::URL);
             $array = XMLDataParse($xml_str);
-            $array['timeStamp'] = time();
-            $array['sign']     = $this->_makeSign();
+            //$array['timeStamp'] = time();
+            //$array['sign']     = $this->_makeSign();
+
+            $json = array();
+            //返回的结果进行判断。
+            if($array['return_code'] == "SUCCESS" && $array['result_code'] == "SUCCESS"){
+                //根据微信支付返回的结果进行二次签名
+                //二次签名所需的随机字符串
+                $array["nonce_str"] = $this -> _createNoncestr();
+                //二次签名所需的时间戳
+                $array['timeStamp'] = time()."";
+                //二次签名剩余参数的补充
+                $secondSignArray = array(
+                    "appid"=>$array['appid'],
+                    "noncestr"=>$array['nonce_str'],
+                    "package"=>"Sign=WXPay",
+                    "prepayid"=>$array['prepay_id'],
+                    "partnerid"=>$array['mch_id'],
+                    "timestamp"=>$array['timeStamp'],
+                );
+                //$json['success'] = 1;
+                //$json['ordersn'] = $array["out_trade_no"]; //订单号
+                //$json['order_arr'] = $secondSignArray; //返给前台APP的预支付订单信息
+                $array['sign'] = $this -> _appgetSign($secondSignArray); //预支付订单签名
+                $array['data'] = "预支付完成";
+                //预支付完成,在下方进行自己内部的业务逻辑
+                /*****************************/
+                //return json_encode($json);
+            }
+            else{
+                $array['success'] = 0;
+                $array['error'] = $array['return_msg'];
+                //return json_encode($json);
+            }
+    
 
             return $array;
         }
@@ -126,9 +158,9 @@
 
             //$this->_config['sign']     = $sign_info;
         }
-        /*
-        private function _makeSign() { 
-            foreach ($this->_config as $k => $v) 
+        
+        private function _appgetSign($Obj) { 
+            foreach ($Obj as $k => $v) 
             { 
                 $Parameters[$k] = $v; 
             }
@@ -140,10 +172,7 @@
 
 
             //签名步骤二：在string后加入KEY
-            if($appwxpay_key){
-                $String = $String."&key=" . self::API_SECRET;
-            }
-            //echo "【string2】".$String."</br>";
+            $String = $String."&key=" . self::API_SECRET;
 
             //签名步骤三：MD5加密
 
@@ -154,6 +183,8 @@
             $result_ = strtoupper($String);
 
             $this->_config['sign']     = $result_;
+
+            return $result_;
         }
 
         private function formatBizQueryParaMap($paraMap, $urlencode) {
@@ -177,7 +208,7 @@
             }
             return $reqPar;
         }
-*/
+
 
         /**
          * 以post方式提交xml到对应的接口url
