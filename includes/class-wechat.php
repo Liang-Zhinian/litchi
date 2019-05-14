@@ -32,7 +32,10 @@
             my_log_file($xml_str, 'Litchi_WeChat->run: $xml_str');
 
             $xml_str =  $this->_postXmlCurl($xml_str,self::URL);
-            return XMLDataParse($xml_str);
+            $array = XMLDataParse($xml_str);
+            $array['timeStamp'] = time();
+
+            return $array;
         }
         
         private function _arrayToXml($arr) {
