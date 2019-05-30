@@ -3,6 +3,10 @@
 defined( 'ABSPATH' ) || exit;
 
 
+
+/////////////////////////////////
+////////////////////////////// shipping /////////////////////////////////////////////
+/* add phone attribute to additional_shipping meta data */
 add_action( 'rest_api_init', 'slug_register_customer_fields' );
 function slug_register_customer_fields() {
 
@@ -107,7 +111,6 @@ function get_shipping_schema(){
 
 function get_customerMeta( $data, $field_name, $request ) {
 	global $wp_rest_additional_fields;
-    // my_log_file($wp_rest_additional_fields, 'get_customerMeta $wp_rest_additional_fields');
 
     $shipping = $data[$field_name];    
 
@@ -163,7 +166,14 @@ function update_customerShippingListMeta($value,$data,$field_name) {
     update_user_meta( $data->ID, $field_name, $shipping/*$value*/ );
 
 };
+/* end add phone attribute to additional_shipping meta data */
 
+
+
+/////////////////////////////////
+////////////////////////////// shopping cart /////////////////////////////////////////////
+
+/* add shopping cart attribute to additional_shipping meta data */
 add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
 /**
  * Add extra fields in customers response.
@@ -175,26 +185,11 @@ add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' )
  */
 function prepare_customers_response( $response/*, $user, $request*/ ) {
     $data = $response->get_data();
-    // my_log_file($data['id'], 'prepare_customers_response: $data[\'id\']');
-
-    // $customer = new WC_Customer( $data['id'] );
-    // WooCommerce 3.0 or later.
-    // if ( method_exists( $customer, 'get_meta' ) ) {
-    //     // Shopping cart fields.
-    //     // _woocommerce_persistent_cart_1
-    //     $response->data['cart']       = $customer->get_meta( '_woocommerce_persistent_cart_1' );
-    // } else {
-    //     //  Shopping cart fields.
-    //     $response->data['cart']       = $customer->cart;
-    // }
 
     $cart = get_user_meta( $data[ 'id' ], '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
-    // foreach ($cart as $addr) {
-    //     $shipping[] = get_shipping_address($addr);
-    // }
 
-    $response->data['cart']       =  $cart; //['cart'];
+    $response->data['cart']       =  $cart;
 
-    // $response->set_data( $data );
     return $response;
 }
+/* end add shopping cart attribute to additional_shipping meta data */

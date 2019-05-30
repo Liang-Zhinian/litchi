@@ -2,6 +2,9 @@
 
 defined( 'ABSPATH' ) || exit;
 
+/////////////////////////////////
+////////////////////////////// shipping /////////////////////////////////////////////
+/* add phone attribute to shipping meta data */
 add_action( 'rest_api_init', 'slug_register_order_fields' );
 function slug_register_order_fields() {
 
@@ -103,12 +106,6 @@ function get_orderMeta($data,$field_name,$request) {
     return $shipping;
 };
 function update_orderMeta($value,$data,$field_name) {
-    //log_me(array('This is a message' => 'for debugging purposes'));
-    // my_log_file($value['phone']);
-    //my_log_file($data);
-    //my_log_file($field_name);
-    // if ( ! $value['phone'] || ! is_string( $value['phone'] ) ) return;
-    // update_post_meta( $data->ID, $field_name.'_phone', sanitize_text_field( $value['phone'] ) );
 
     update_post_meta( $data->ID, $field_name.'_first_name', sanitize_text_field( $value['first_name'] ) );
     update_post_meta( $data->ID, $field_name.'_last_name', sanitize_text_field( $value['last_name'] ) );
@@ -184,3 +181,56 @@ function my_custom_admin_css() {
     }
   </style>';
 }
+
+/* end add phone attribute to shipping meta data */
+
+
+/////////////////////////////////
+////////////////////////////// order status /////////////////////////////////////////////
+/* add custom order status */
+
+// Register new status
+function register_additional_order_status() {
+    register_post_status( 'wc-awaiting-shipment', array(
+        'label'                     => 'Awaiting shipment',
+        'public'                    => true,
+        'exclude_from_search'       => false,
+        'show_in_admin_all_list'    => true,
+        'show_in_admin_status_list' => true,
+        'label_count'               => _n_noop( 'Awaiting shipment (%s)', 'Awaiting shipment (%s)' )
+    ) );
+
+    register_post_status( 'wc-shipped', array(
+        'label'                     => 'Shipped',
+        'public'                    => true,
+        'exclude_from_search'       => false,
+        'show_in_admin_all_list'    => true,
+        'show_in_admin_status_list' => true,
+        'label_count'               => _n_noop( 'Shipped (%s)', 'Shipped (%s)' )
+    ) );
+}
+add_action( 'init', 'register_additional_order_status' );
+
+// Add to list of WC Order statuses
+function add_additional_order_statuses( $order_statuses ) {
+ 
+    $new_order_statuses = array();
+ 
+    // add new order status after processing
+    foreach ( $order_statuses as $key => $status ) {
+ 
+        $new_order_statuses[ $key ] = $status;
+ 
+        if ( 'wc-processing' === $key ) {
+            $new_order_statuses['wc-awaiting-shipment'] = 'Awaiting shipment';
+            $new_order_statuses['wc-shipped'] = 'Shipped';
+        }
+ 
+        // if ( 'wc-awaiting-shipment' === $key ) {
+        //     $new_order_statuses['wc-shipped'] = 'Shipped';
+        // }
+    }
+ 
+    return $new_order_statuses;
+}
+add_filter( 'wc_order_statuses', 'add_additional_order_statuses' );
