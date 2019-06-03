@@ -10,8 +10,8 @@ function slug_register_order_fields() {
 
         register_rest_field( 'shop_order', 'shipping',
             array(
-                'get_callback'    => 'get_orderMeta',
-                'update_callback' => 'update_orderMeta',
+                'get_callback'    => 'get_shippingMeta',
+                'update_callback' => 'update_shippingMeta',
                 'schema'          => array(
                     'shipping' => array(
                         'first_name' => array (
@@ -68,6 +68,84 @@ function slug_register_order_fields() {
                 ),
             )
         );
+
+        register_rest_field( 'shop_order', 'customer',
+            array(
+                'get_callback'    => 'get_customerMetaX',
+                'schema'          => array(
+                    'customer' => array (
+                        'id'                 => array(
+                            'description' => __( 'Unique identifier for the resource.', 'woocommerce' ),
+                            'type'        => 'integer',
+                            'context'     => array( 'view', 'edit' ),
+                            'readonly'    => true,
+                        ),
+                        'email'              => array(
+                            'description' => __( 'The email address for the customer.', 'woocommerce' ),
+                            'type'        => 'string',
+                            'format'      => 'email',
+                            'context'     => array( 'view', 'edit' ),
+                        ),
+                        'first_name'         => array(
+                            'description' => __( 'Customer first name.', 'woocommerce' ),
+                            'type'        => 'string',
+                            'context'     => array( 'view', 'edit' ),
+                            'arg_options' => array(
+                                'sanitize_callback' => 'sanitize_text_field',
+                            ),
+                        ),
+                        'last_name'          => array(
+                            'description' => __( 'Customer last name.', 'woocommerce' ),
+                            'type'        => 'string',
+                            'context'     => array( 'view', 'edit' ),
+                            'arg_options' => array(
+                                'sanitize_callback' => 'sanitize_text_field',
+                            ),
+                        ),
+                        'username'           => array(
+                            'description' => __( 'Customer login name.', 'woocommerce' ),
+                            'type'        => 'string',
+                            'context'     => array( 'view', 'edit' ),
+                            'arg_options' => array(
+                                'sanitize_callback' => 'sanitize_user',
+                            ),
+                        ),
+                        'avatar_url'         => array(
+                            'description' => __( 'Avatar URL.', 'woocommerce' ),
+                            'type'        => 'string',
+                            'context'     => array( 'view', 'edit' ),
+                            'readonly'    => true,
+                        ),
+                        'meta_data'          => array(
+                            'description' => __( 'Meta data.', 'woocommerce' ),
+                            'type'        => 'array',
+                            'context'     => array( 'view', 'edit' ),
+                            'items'       => array(
+                                'type'       => 'object',
+                                'properties' => array(
+                                    'id'    => array(
+                                        'description' => __( 'Meta ID.', 'woocommerce' ),
+                                        'type'        => 'integer',
+                                        'context'     => array( 'view', 'edit' ),
+                                        'readonly'    => true,
+                                    ),
+                                    'key'   => array(
+                                        'description' => __( 'Meta key.', 'woocommerce' ),
+                                        'type'        => 'string',
+                                        'context'     => array( 'view', 'edit' ),
+                                    ),
+                                    'value' => array(
+                                        'description' => __( 'Meta value.', 'woocommerce' ),
+                                        'type'        => 'mixed',
+                                        'context'     => array( 'view', 'edit' ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    )
+                ),
+            )
+        );
 }
 
 
@@ -89,23 +167,35 @@ function prepare_shop_orders_response( $response, $post, $request ) {
         return $response;
 
     $response->data['shipping']['phone'] = get_post_meta( $post->ID, '_shipping_phone', true);
+    
+    $customer    = new WC_Customer( $response->data['customer_id'] );
+    $_data       = $customer->get_data();
+    //$response->data['customer'] = $_data;
+
 
     return $response;
 
 }
 
-        
+function get_customerMetaX($data,$field_name,$request) {
+    my_log_file($data);
 
-function get_orderMeta($data,$field_name,$request) {
+    $customer    = new WC_Customer( $data['customer_id'] );
+    $_data       = $customer->get_data();
+    $data['customer'] = $_data;
+
+    return $data['customer'];
+};
+
+function get_shippingMeta($data,$field_name,$request) {
     my_log_file($data);
 
     $shipping = $data['shipping'];
     $shipping['phone'] = get_post_meta( $data[ 'id' ], '_'.$field_name."_phone", true );
-    
 
     return $shipping;
 };
-function update_orderMeta($value,$data,$field_name) {
+function update_shippingMeta($value,$data,$field_name) {
 
     update_post_meta( $data->ID, $field_name.'_first_name', sanitize_text_field( $value['first_name'] ) );
     update_post_meta( $data->ID, $field_name.'_last_name', sanitize_text_field( $value['last_name'] ) );
