@@ -324,3 +324,72 @@ function add_additional_order_statuses( $order_statuses ) {
     return $new_order_statuses;
 }
 add_filter( 'wc_order_statuses', 'add_additional_order_statuses' );
+
+
+///////////////////////////////////////////
+
+/* Add Custom Meta to the Shop Order API Response */
+add_filter( 'wcfmapi_rest_prepare_shop_order_object',  'my_wcfmapi_rest_prepare_shop_order_object', 10, 3 );
+/**
+ * Add extra fields in orders response.
+ *
+ * @param WP_REST_Response $response The response object.
+ * @param WP_Post          $post     Order object used to create response.
+ *
+ * @return WP_REST_Response
+ */
+function my_wcfmapi_rest_prepare_shop_order_object( $response, $post, $request ) {
+     if( empty( $response->data ) )
+        return $response;
+
+    $data=[];
+
+    foreach ( $response->get_data() as $order ) {
+        $customer    = new WC_Customer( $order['customer_id'] );
+        $_data       = $customer->get_data();
+        $order['customer'] = $_data;
+
+        $order['shipping']['phone'] = get_post_meta( $order[ 'id' ], '_shipping_phone', true );
+
+        $data[] = $order;
+    }
+    $response->set_data($data);
+
+ //   $response->data['shipping']['phone'] = get_post_meta( $post->ID, '_shipping_phone', true);
+    
+    return $response;
+
+}
+
+
+///////////////////////////////////////////
+
+/* Add Custom Meta to the Shop Order API Response */
+add_filter( 'wcfmapi_rest_prepare_shop_order_objects',  'my_wcfmapi_rest_prepare_shop_order_objects', 10, 3 );
+/**
+ * Add extra fields in orders response.
+ *
+ * @param WP_REST_Response $response The response object.
+ * @param WP_Post          $post     Order object used to create response.
+ *
+ * @return WP_REST_Response
+ */
+function my_wcfmapi_rest_prepare_shop_order_objects( $response, $post, $request ) {
+    if( empty( $response->data ) )
+       return $response;
+
+   $data=[];
+
+   foreach ( $response->get_data() as $order ) {
+       $customer    = new WC_Customer( $order['customer_id'] );
+       $_data       = $customer->get_data();
+       $order['customer'] = $_data;
+       $order['shipping']['phone'] = get_post_meta( $order[ 'id' ], '_shipping_phone', true );
+       $data[] = $order;
+   }
+   $response->set_data($data);
+
+//   $response->data['shipping']['phone'] = get_post_meta( $post->ID, '_shipping_phone', true);
+   
+   return $response;
+}
