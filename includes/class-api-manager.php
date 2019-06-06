@@ -29,6 +29,7 @@ class Litchi_API_Manager {
             LITCHI_DIR . '/includes/api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
             LITCHI_DIR . '/includes/api/class-customer-controller.php'                 => 'Litchi_REST_Customer_Controller',
             LITCHI_DIR . '/includes/api/class-wechat-controller.php'                 => 'Litchi_REST_WeChat_Controller',
+            LITCHI_DIR . '/includes/api/class-wcfmmarketplace-reports-controller.php'                 => 'Litchi_REST_Wcfmmp_Reports_Controller',
             
         ) );
 
