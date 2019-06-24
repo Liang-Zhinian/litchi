@@ -59,56 +59,12 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
 					'default' => null
 				),
 			),
-			array(
-				'methods'             => WP_REST_Server::READABLE,
-				'callback'            => array( $this, 'get_cart' ),
-				// 'permission_callback' => array( $this, 'get_item_permissions_check' ),
-				'args'                => array(
-					'context' => $this->get_context_param( array( 'default' => 'view' ) ),
-				),
-			),
+            'methods'             => WP_REST_Server::READABLE,
+            // 'callback'            => array( $this, 'get_cart' ),
+            // 'permission_callback' => array( $this, 'rest_edit_user_callback' ),
+			'callback' => __CLASS__ . '::get_cart',
+			'permission_callback' => __CLASS__ . '::rest_edit_user_callback',
         ) );
-
-        // register_rest_route( $this->namespace, '/' . $this->base . '/(?P<id>[\d]+)/', array(
-        //     'args' => array(
-        //         'id' => array(
-        //             'description' => __( 'Unique identifier for the object.', 'litchi' ),
-        //             'type'        => 'integer',
-        //         ),
-        //     ),
-        //     array(
-        //         'methods'             => WP_REST_Server::READABLE,
-        //         'callback'            => array( $this, 'get_item' ),
-        //         'args'                => $this->get_collection_params(),
-        //         'permission_callback' => array( $this, 'get_single_product_permissions_check' ),
-        //     ),
-        //     array(
-        //         'methods'             => WP_REST_Server::EDITABLE,
-        //         'callback'            => array( $this, 'update_item' ),
-        //         'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::EDITABLE ),
-        //         'permission_callback' => array( $this, 'update_product_permissions_check' ),
-        //     ),
-        //     array(
-        //         'methods'             => WP_REST_Server::DELETABLE,
-        //         'callback'            => array( $this, 'delete_item' ),
-        //         'permission_callback' => array( $this, 'delete_product_permissions_check' ),
-        //         'args'                => array(
-        //             'force' => array(
-        //                 'type'        => 'boolean',
-        //                 'default'     => false,
-        //                 'description' => __( 'Whether to bypass trash and force deletion.', 'litchi' ),
-        //             ),
-        //         ),
-        //     )
-        // ) );
-
-        // register_rest_route( $this->namespace, '/' . $this->base . '/summary', array(
-        //     array(
-        //         'methods'             => WP_REST_Server::READABLE,
-        //         'callback'            => array( $this, 'get_product_summary' ),
-        //         'permission_callback' => array( $this, 'get_product_summary_permissions_check' ),
-        //     ),
-        // ) );
     } // register_routes()
 
 
@@ -123,15 +79,17 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
 	 * @return  WP_REST_Response
 	 */
 	public function get_cart( $request = array() ) {
+        global $WCFM, $wpdb;
+
 		$id        = (int) $request['id'];
 		$user_data = get_userdata( $id );
 
 		if ( empty( $id ) || empty( $user_data->ID ) ) {
 			return new WP_Error( 'woocommerce_rest_invalid_id', __( 'Invalid resource ID.', 'woocommerce' ), array( 'status' => 404 ) );
 		}
-		$customer    = new WC_Customer( $user_data->ID );
-        // $cart = WC()->cart->get_cart();
-        $cart = get_user_meta( $user_data->ID, '_woocommerce_persistent_cart_' . get_current_blog_id(), true )['cart'];
+        $customer    = new WC_Customer( $user_data->ID );
+        
+        $cart = get_user_meta( $user_data->ID, '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
         
 		// if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
 		// 	return new WP_REST_Response( array(), 200 );
@@ -139,27 +97,61 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
         
         $show_thumb = ! empty( $request['thumb'] ) ? $request['thumb'] : false;
         
-		foreach ( $cart as $item_key => $cart_item ) {
-            my_log_file($item_key, 'get_cart: $item_key');
-            my_log_file($cart_item, 'get_cart: $cart_item');
-            $_product = wc_get_product($cart_item['product_id']); //apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
-            
-			// Adds the product name as a new variable.
-            $cart[$item_key]['product_name'] = $_product->get_name();
-            
-			// If main product thumbnail is requested then add it to each item in cart.
-			if ( $show_thumb ) {
-				$thumbnail_id = apply_filters( 'wc_cart_rest_api_cart_item_thumbnail', $_product->get_image_id(), $cart_item, $item_key );
+	
+		$cart = $cart['cart'];
+
+        
+        // Reset the packages
+        $packages_reset = array();
+
+        foreach(array_keys( $cart ) as $field) {
+            $cart_item = $cart[$field];
+            $product_id = $cart_item['product_id'];
+
+            $_product = wc_get_product($product_id); //apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
+                
+            // Adds the product name as a new variable.
+            $cart_item['product_name'] = $_product->get_name();
+                
+            // If main product thumbnail is requested then add it to each item in cart.
+            if ( $show_thumb ) {
+                $thumbnail_id = apply_filters( 'wc_cart_rest_api_cart_item_thumbnail', $_product->get_image_id(), $cart_item, $field );
                 $thumbnail_src = wp_get_attachment_image_src( $thumbnail_id, 'woocommerce_thumbnail' );
                 
-				// Add main product image as a new variable.
-                $cart[$item_key]['product_image'] = esc_url( $thumbnail_src[0] );
+                // Add main product image as a new variable.
+                $cart_item['product_image'] = esc_url( $thumbnail_src[0] );
             }
+
+            $author_id = get_post_field( 'post_author', $product_id );
+
+            $packages_reset[$author_id]['contents'][] = $cart_item;
+
+
+            $store = litchi()->vendor->get( $author_id );
+            $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
             
-        //     $cart[$item_key]['customer'] = $customer;
+            $cart_item['store'] = array(
+                'id'        => $store->get_id(),
+                'name'      => $store->get_name(),
+                'shop_name' => $store->get_shop_name(),
+                'url'       => $store->get_shop_url(),
+                'address'   => $store->get_address(),
+                'logo'      => $store_logo
+            );
+            
+            $packages_reset[$author_id]['store'] = array(
+                'id'        => $store->get_id(),
+                'name'      => $store->get_name(),
+                'shop_name' => $store->get_shop_name(),
+                'url'       => $store->get_shop_url(),
+                'address'   => $store->get_address(),
+                'logo'      => $store_logo
+            );
+            // $cart[$field] = $cart_item;
         }
-        
-		return new WP_REST_Response( $cart, 200 );
+
+    //$response->data['cart']       =  $packages_reset;        
+		return new WP_REST_Response( $packages_reset, 200 );
     } // END get_cart()
     
 	/**
@@ -177,5 +169,9 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
 			return new WP_REST_Response( __( 'There are no items in the cart!', 'litchi' ), 200 );
 		}
 		return $count;
-	} // END get_cart_contents_count()
+    } // END get_cart_contents_count()
+    
+    public static function rest_edit_user_callback( $data ) {
+		return current_user_can( 'edit_user', $data['user_id'] );
+	}
 }

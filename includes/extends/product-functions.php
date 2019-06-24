@@ -61,3 +61,72 @@ function add_meta_query( $args, $meta_query ) {
 
     return $args['meta_query'];
 }
+
+//////////////////////////////////////
+
+
+add_filter( 'woocommerce_rest_prepare_product_object', 'prepeare_product_response', 10, 3 );
+add_filter( 'woocommerce_api_product_response', 'filter_woocommerce_api_product_response', 10, 4 );
+
+/**
+ * Legacy: Prepare object for product response
+ *
+ * @since 1.2.0
+ */
+function filter_woocommerce_api_product_response( $product_data, $product, $fields, $this_server ) { 
+    
+    global $WCFM, $WCFMmp;
+
+    // $product_data['vendor_id'] = get_post_field( 'post_author', $product->id);
+    // $product_data['vendor_name'] = get_the_author_meta( 'display_name', $product_data['vendor_id']);
+
+    $author_id = get_post_field( 'post_author', $product_data['id'] );
+
+    $store = litchi()->vendor->get( $author_id );
+    // $the_user = get_user_by( 'id', $author_id );;
+
+    
+    $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
+    
+    $product_data['store'] = array(
+        'id'        => $store->get_id(),
+        'name'      => $store->get_name(),
+        'shop_name' => $store->get_shop_name(),
+        'url'       => $store->get_shop_url(),
+        'address'   => $store->get_address(),
+        'logo'      => $store_logo
+    );
+
+
+    return $product_data;
+}
+
+/**
+ * Prepare object for product response
+ *
+ * @since 2.8.0
+ *
+ * @return void
+ */
+function prepeare_product_response( $response, $object, $request ) {
+    global $WCFM, $WCFMmp;
+    $data = $response->get_data();
+    $author_id = get_post_field( 'post_author', $data['id'] );
+
+    $store = litchi()->vendor->get( $author_id );
+    // $the_user = get_user_by( 'id', $author_id );;
+    
+    $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
+
+    $data['store'] = array(
+        'id'        => $store->get_id(),
+        'name'      => $store->get_name(),
+        'shop_name' => $store->get_shop_name(),
+        'url'       => $store->get_shop_url(),
+        'address'   => $store->get_address(),
+        'logo'      => $store_logo
+    );
+
+    $response->set_data( $data );
+    return $response;
+}

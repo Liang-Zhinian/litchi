@@ -355,7 +355,6 @@ function my_wcfmapi_rest_prepare_shop_order_object( $response, $post, $request )
     }
     $response->set_data($data);
 
- //   $response->data['shipping']['phone'] = get_post_meta( $post->ID, '_shipping_phone', true);
     
     return $response;
 
@@ -375,21 +374,39 @@ add_filter( 'wcfmapi_rest_prepare_shop_order_objects',  'my_wcfmapi_rest_prepare
  * @return WP_REST_Response
  */
 function my_wcfmapi_rest_prepare_shop_order_objects( $response, $post, $request ) {
+    global $WCFM, $WCFMmp, $wp, $theorder, $wpdb;
     if( empty( $response->data ) )
        return $response;
 
    $data=[];
+   
+   $admin_fee_mode = apply_filters( 'wcfm_is_admin_fee_mode', false );
 
    foreach ( $response->get_data() as $order ) {
        $customer    = new WC_Customer( $order['customer_id'] );
        $_data       = $customer->get_data();
        $order['customer'] = $_data;
        $order['shipping']['phone'] = get_post_meta( $order[ 'id' ], '_shipping_phone', true );
+       
+        $theorder = wc_get_order( $order['id'] );
+
+        $commission = $WCFM->wcfm_vendor_support->wcfm_get_commission_by_order( $order['id'] );
+        if( $commission ) {
+            $gross_sales  = (float) $theorder->get_total();
+            $total_refund = (float) $theorder->get_total_refunded();
+            if( $admin_fee_mode ) {
+                $commission = $gross_sales - $total_refund - $commission;
+            }
+            //$commission =  wc_price( $commission, array( 'currency' => $theorder->get_currency() ) );
+        } else {
+            $commission =  'N/A'; //__( 'N/A', 'wc-frontend-manager' );
+        }
+                                    
+        $order['commission']=$commission;
        $data[] = $order;
    }
    $response->set_data($data);
 
-//   $response->data['shipping']['phone'] = get_post_meta( $post->ID, '_shipping_phone', true);
    
    return $response;
 }

@@ -495,6 +495,7 @@ class WCFMMP_Report_Sales_By_Date extends WC_Admin_Report {
 		//$total_paid_commission = $total_commission;
 		
 		// Encode in json format
+		
 		$chart_data = '{'
 			. '  "order_counts"             : ' . $WCFM->wcfm_prepare_chart_data( $order_counts )
 			. ', "order_item_counts"        : ' . $WCFM->wcfm_prepare_chart_data( $order_item_counts )
@@ -504,6 +505,20 @@ class WCFMMP_Report_Sales_By_Date extends WC_Admin_Report {
 			. ', "total_paid_commission"    : ' . $WCFM->wcfm_prepare_chart_data( $total_paid_commission )
 			. ', "total_gross_sales"        : ' . $WCFM->wcfm_prepare_chart_data( $total_gross_sales )
 			. ', "total_refund"             : ' . $WCFM->wcfm_prepare_chart_data( $total_refund )
-          . '}';
+		  . '}';
+		
+		/*
+		$chart_data["order_counts"] = $WCFM->wcfm_prepare_chart_data( $order_counts );
+		$chart_data["order_item_counts"] = $WCFM->wcfm_prepare_chart_data( $order_item_counts );
+		$chart_data["tax_amounts"] = $WCFM->wcfm_prepare_chart_data( $tax_amounts );
+		$chart_data["shipping_amounts"] = $WCFM->wcfm_prepare_chart_data( $shipping_amounts );
+		$chart_data["total_earned_commission"] = $WCFM->wcfm_prepare_chart_data( $total_earned_commission );
+		$chart_data["total_paid_commission"] = $WCFM->wcfm_prepare_chart_data( $total_paid_commission );
+		$chart_data["total_gross_sales"] = $WCFM->wcfm_prepare_chart_data( $total_gross_sales );
+		$chart_data["total_refund"] = $WCFM->wcfm_prepare_chart_data( $total_refund );
+		*/
+		
+		  
+		return json_decode($chart_data);
     }
 }

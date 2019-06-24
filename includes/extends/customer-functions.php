@@ -35,6 +35,47 @@ function slug_register_customer_fields() {
                 ),
             )
         );
+
+        register_rest_field( 'customer', 'cart',
+            array(
+                //'get_callback'    => 'get_customerCartData',
+                'update_callback' => 'update_customerAddToCart',
+                'schema'          => array(
+                    'cart' => array(
+                        'description' => __( 'Customer cart data.', 'woocommerce' ),
+                        'type'        => 'object',
+                        'context'     => array( 'view', 'edit' ),
+                        'readonly'    => false,
+                        'properties'  => array(
+                            'product_id' => array (
+                                'description' => __( 'product_id', 'woocommerce' ),
+                                'type' => 'integer',
+                                'context' => array( 'view', 'edit' ),
+                            ),
+                            'quantity' => array (
+                                'description' => __( 'quantity', 'woocommerce' ),
+                                'type' => 'integer',
+                                'context' => array( 'view', 'edit' ),
+                            ),
+                            'variation_id' => array (
+                                'description' => __( 'variation_id', 'woocommerce' ),
+                                'type' => 'integer',
+                                'context' => array( 'view', 'edit' ),
+                            )
+                        )
+                    )
+                ),
+            )
+        );
+}
+
+function update_customerAddToCart($value,$data,$field_name){
+    $customerId = $data->ID;
+    $cart = get_user_meta( $customerId, '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
+
+    // add_to_cart( $product_id = 0, $quantity = 1, $variation_id = 0, $variation = array(), $cart_item_data = array() )
+    $cart -> add_to_cart($value['product_id'], $value['quantity'], $value['variation_id'], $value['variation'], $value['cart_item_data']);
+    
 }
 
 function additional_shipping_fields(){
@@ -173,7 +214,7 @@ function update_customerShippingListMeta($value,$data,$field_name) {
 /////////////////////////////////
 ////////////////////////////// shopping cart /////////////////////////////////////////////
 
-/* add shopping cart attribute to additional_shipping meta data */
+/* add shopping cart attribute to customer response */
 add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
 /**
  * Add extra fields in customers response.
@@ -184,12 +225,65 @@ add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' )
  * @return WP_REST_Response
  */
 function prepare_customers_response( $response/*, $user, $request*/ ) {
+    global $WCFM, $wpdb;
     $data = $response->get_data();
 
     $cart = get_user_meta( $data[ 'id' ], '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
+    
+    $cart = $cart['cart'];
 
-    $response->data['cart']       =  $cart;
+        
+    // Reset the packages
+    $packages_reset = array();
+
+    foreach(array_keys( $cart ) as $field) {
+        $cart_item = $cart[$field];
+        $product_id = $cart_item['product_id'];
+
+        $_product = wc_get_product($product_id); //apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
+            
+        // Adds the product name as a new variable.
+        $cart_item['product_name'] = $_product->get_name();
+            
+        // If main product thumbnail is requested then add it to each item in cart.
+        // if ( $show_thumb ) {
+            $thumbnail_id = apply_filters( 'wc_cart_rest_api_cart_item_thumbnail', $_product->get_image_id(), $cart_item, $field );
+            $thumbnail_src = wp_get_attachment_image_src( $thumbnail_id, 'woocommerce_thumbnail' );
+            
+            // Add main product image as a new variable.
+            $cart_item['product_image'] = esc_url( $thumbnail_src[0] );
+        // }
+
+        $author_id = get_post_field( 'post_author', $product_id );
+
+        $packages_reset[$author_id]['contents'][] = $cart_item;
+
+
+        $store = litchi()->vendor->get( $author_id );
+        $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
+        
+        $cart_item['store'] = array(
+            'id'        => $store->get_id(),
+            'name'      => $store->get_name(),
+            'shop_name' => $store->get_shop_name(),
+            'url'       => $store->get_shop_url(),
+            'address'   => $store->get_address(),
+            'logo'      => $store_logo
+        );
+        
+        $packages_reset[$author_id]['store'] = array(
+            'id'        => $store->get_id(),
+            'name'      => $store->get_name(),
+            'shop_name' => $store->get_shop_name(),
+            'url'       => $store->get_shop_url(),
+            'address'   => $store->get_address(),
+            'logo'      => $store_logo
+        );
+        // $cart[$field] = $cart_item;
+    }
+
+    $response->data['cart']       =  $packages_reset;
 
     return $response;
 }
-/* end add shopping cart attribute to additional_shipping meta data */
+/* end add shopping cart attribute to customer response */
