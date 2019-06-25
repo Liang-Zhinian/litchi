@@ -253,7 +253,6 @@ if(!class_exists('Litchi'))
 
 			add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array( $this, 'plugin_action_links' ) );
 			
-			// add_action( 'in_plugin_update_message-dokan-lite/dokan.php', array( 'Dokan_Installer', 'in_plugin_update_message' ) );
 
 			// add_action( 'widgets_init', array( $this, 'register_widgets' ) );
 		}
@@ -275,12 +274,12 @@ if(!class_exists('Litchi'))
 			require_once $inc_dir . 'class-vendor-manager.php';
 
 			// API includes
-			//require_once $inc_dir . 'api/class-api-rest-controller.php';
 			require_once $inc_dir . 'class-api-manager.php';
 
 			//require_once $inc_dir . 'basic-auth.php';
 			
 			require_once $inc_dir . 'class-wechat.php';
+			require_once $inc_dir . 'log.php';
 
 		}
 
@@ -291,7 +290,6 @@ if(!class_exists('Litchi'))
 		 */
 		function init_classes() {
 			$this->container['vendor']        = new Litchi_Vendor_Manager();
-			// $this->container['product']       = new Dokan_Product_Manager();
 			$this->container['api']           = new Litchi_API_Manager();
 		}
 

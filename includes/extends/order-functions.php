@@ -383,10 +383,10 @@ function my_wcfmapi_rest_prepare_shop_order_objects( $response, $post, $request 
    $admin_fee_mode = apply_filters( 'wcfm_is_admin_fee_mode', false );
 
    foreach ( $response->get_data() as $order ) {
-       $customer    = new WC_Customer( $order['customer_id'] );
-       $_data       = $customer->get_data();
-       $order['customer'] = $_data;
-       $order['shipping']['phone'] = get_post_meta( $order[ 'id' ], '_shipping_phone', true );
+        $customer    = new WC_Customer( $order['customer_id'] );
+        $_data       = $customer->get_data();
+        $order['customer'] = $_data;
+        $order['shipping']['phone'] = get_post_meta( $order[ 'id' ], '_shipping_phone', true );
        
         $theorder = wc_get_order( $order['id'] );
 
@@ -403,10 +403,10 @@ function my_wcfmapi_rest_prepare_shop_order_objects( $response, $post, $request 
         }
                                     
         $order['commission']=$commission;
-       $data[] = $order;
-   }
-   $response->set_data($data);
+        $data[] = $order;
+    }
+    $response->set_data($data);
 
    
-   return $response;
+    return $response;
 }

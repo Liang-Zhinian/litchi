@@ -186,15 +186,15 @@ class Litchi_REST_Social_Controller extends WP_REST_Controller
         $jwt = apply_filters('jwt_auth_token_before_dispatch', $data, $user);
         
         
-	$user_reset = array();
+        $user_reset = array();
 
-/*
-	foreach( array_keys( $user ) as $item_key => $item_value ){
-		$user_reset[$item_key] = $item_value;
-	}*/
-	$user_reset['user'] = $user;
+    /*
+        foreach( array_keys( $user ) as $item_key => $item_value ){
+            $user_reset[$item_key] = $item_value;
+        }*/
+        $user_reset['user'] = $user;
 
-	$user_reset['jwt'] = $jwt;
+        $user_reset['jwt'] = $jwt;
 
         return $this->create_response( $user_reset );
     }
