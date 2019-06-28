@@ -36,6 +36,7 @@ function slug_register_customer_fields() {
             )
         );
 
+        /*
         register_rest_field( 'customer', 'cart',
             array(
                 //'get_callback'    => 'get_customerCartData',
@@ -66,7 +67,7 @@ function slug_register_customer_fields() {
                     )
                 ),
             )
-        );
+        );*/
 }
 
 function update_customerAddToCart($value,$data,$field_name){

@@ -49,22 +49,30 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
      */
     public function register_routes() {
         // GET: /wp-json/litchi/v1/cart
-        register_rest_route( $this->namespace, '/customers'.'/(?P<id>[\d]+)/' . $this->base, array(
+        register_rest_route( $this->namespace, '/' . $this->base, array(
 			'args' => array(
-				'id' => array(
-					'description' => __( 'Unique identifier for the resource.', 'woocommerce' ),
-					'type'        => 'integer',
-				),
 				'thumb' => array(
 					'default' => null
 				),
 			),
             'methods'             => WP_REST_Server::READABLE,
-            // 'callback'            => array( $this, 'get_cart' ),
-            // 'permission_callback' => array( $this, 'rest_edit_user_callback' ),
-			'callback' => __CLASS__ . '::get_cart',
-			'permission_callback' => __CLASS__ . '::rest_edit_user_callback',
+            'callback'            => array( $this, 'get_cart' ),
         ) );
+
+        
+		// Remove Items - /wp-json/litchi/v1/cart/cart-items (DELETE)
+		register_rest_route( $this->namespace, '/' . $this->base . '/cart-items', array(
+			'args' => array(
+				'cart_item_keys' => array(
+					'description' => __( 'The cart item key is what identifies the item in the cart.', 'cart-rest-api-for-woocommerce' ),
+					'type'        => 'string',
+				),
+			),
+			array(
+				'methods'  => WP_REST_Server::DELETABLE,
+				'callback' => array( $this, 'remove_items' ),
+			),
+		) );
     } // register_routes()
 
 
@@ -81,15 +89,7 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
 	public function get_cart( $request = array() ) {
         global $WCFM, $wpdb;
 
-		$id        = (int) $request['id'];
-		$user_data = get_userdata( $id );
-
-		if ( empty( $id ) || empty( $user_data->ID ) ) {
-			return new WP_Error( 'woocommerce_rest_invalid_id', __( 'Invalid resource ID.', 'woocommerce' ), array( 'status' => 404 ) );
-		}
-        $customer    = new WC_Customer( $user_data->ID );
-        
-        $cart = get_user_meta( $user_data->ID, '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
+        $cart = WC()->cart->get_cart();
         
 		// if ( $this->get_cart_contents_count( array( 'return' => 'numeric' ) ) <= 0 ) {
 		// 	return new WP_REST_Response( array(), 200 );
@@ -98,14 +98,13 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
         $show_thumb = ! empty( $request['thumb'] ) ? $request['thumb'] : false;
         
 	
-		$cart = $cart['cart'];
 
-        
+
         // Reset the packages
         $packages_reset = array();
 
-        foreach(array_keys( $cart ) as $field) {
-            $cart_item = $cart[$field];
+        foreach ( $cart as $item_key => $cart_item ) {
+
             $product_id = $cart_item['product_id'];
 
             $_product = wc_get_product($product_id); //apply_filters( 'wc_cart_rest_api_cart_item_product', $cart_item['data'], $cart_item, $item_key );
@@ -147,12 +146,42 @@ class Litchi_REST_Product_Controller extends WP_REST_Controller {
                 'address'   => $store->get_address(),
                 'logo'      => $store_logo
             );
-            // $cart[$field] = $cart_item;
         }
-
-    //$response->data['cart']       =  $packages_reset;        
+      
 		return new WP_REST_Response( $packages_reset, 200 );
+
     } // END get_cart()
+
+    
+	/**
+	 * Remove Item in Cart.
+	 *
+	 * @access  public
+	 * @since   1.0.0
+	 * @version 1.0.3
+	 * @param   array $data
+	 * @return  WP_Error|WP_REST_Response
+	 */
+	public function remove_items( $data = array() ) {
+		$cart_item_keys = ! isset( $data['cart_item_keys'] ) ? '0' : wc_clean( $data['cart_item_keys'] );
+
+		if ( $cart_item_keys != '0' ) {
+            $key_array = explode(',', $cart_item_keys);
+
+            foreach($key_array as $cart_item_key) {
+
+                if ( WC()->cart->remove_cart_item( $cart_item_key ) ) {
+                    continue;
+                } else {
+                    return new WP_ERROR( 'wc_cart_rest_can_not_remove_item', __( 'Unable to remove item from cart.', 'cart-rest-api-for-woocommerce' ), array( 'status' => 500 ) );
+                }
+            }
+
+            return new WP_REST_Response( __( 'Item has been removed from cart.', 'cart-rest-api-for-woocommerce' ), 200 );
+		} else {
+			return new WP_ERROR( 'wc_cart_rest_cart_item_key_required', __( 'Cart item key is required!', 'cart-rest-api-for-woocommerce' ), array( 'status' => 500 ) );
+		}
+	} // END remove_item()
     
 	/**
 	 * Get cart contents count.

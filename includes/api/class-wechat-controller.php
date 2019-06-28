@@ -49,7 +49,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
      * @return void
      */
     public function register_routes() {
-        // GET: /wp-json/litchi/v1/wx
+        // GET: /wp-json/litchi/v1/wx/pay/unifiedorder
         register_rest_route( $this->namespace, '/' . $this->base . '/pay/unifiedorder', array(
 			'args' => array(
 				'body' => array(
@@ -99,7 +99,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 
     
 	/**
-	 * Get cart.
+	 * unifiedorder.
 	 *
 	 * @access  public
 	 * @since   1.0.0

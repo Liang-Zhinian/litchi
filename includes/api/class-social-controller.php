@@ -136,65 +136,25 @@ class Litchi_REST_Social_Controller extends WP_REST_Controller
         wp_set_auth_cookie( $user->ID );
         do_action( 'wp_login', $user->user_login, $user );
 
+        $jwt = $this -> __generateBearerToken($user);
 
-        // generate & return jwt
-        $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : false;
-
-
-        /** If the authentication fails return a error*/
-        if (is_wp_error($user)) {
-            $error_code = $user->get_error_code();
-            return new WP_Error(
-                '[jwt_auth] ' . $error_code,
-                $user->get_error_message($error_code),
-                array(
-                    'status' => 403,
-                )
-            );
+        if (is_wp_error($jwt)) {
+            return new WP_Error('Login Error', __($jwt->get_error_message()), array('status' => 400));
         }
 
-        /** Valid credentials, the user exists create the according Token */
-        $issuedAt = time();
-        $notBefore = apply_filters('jwt_auth_not_before', $issuedAt, $issuedAt);
-        $expire = apply_filters('jwt_auth_expire', $issuedAt + (DAY_IN_SECONDS * 7), $issuedAt);
-
-        $token = array(
-            'iss' => get_bloginfo('url'),
-            'iat' => $issuedAt,
-            'nbf' => $notBefore,
-            'exp' => $expire,
-            'data' => array(
-                'user' => array(
-                    'id' => $user->data->ID,
-                ),
-            ),
-        );
-
-        /** Let the user modify the token data before the sign. */
-        $token = JWT::encode(apply_filters('jwt_auth_token_before_sign', $token, $user), $secret_key);
-
-
-        /** The token is signed, now create the object with no sensible user data to the client*/
-        $data = array(
-            'token' => $token,
-            'user_email' => $user->data->user_email,
-            'user_nicename' => $user->data->user_nicename,
-            'user_display_name' => $user->data->display_name,
-        );
-
-        /** Let the user modify the data before send it back */
-        $jwt = apply_filters('jwt_auth_token_before_dispatch', $data, $user);
-        
-        
         $user_reset = array();
 
-    /*
+        /*
         foreach( array_keys( $user ) as $item_key => $item_value ){
-            $user_reset[$item_key] = $item_value;
+        $user_reset[$item_key] = $item_value;
         }*/
-        $user_reset['user'] = $user;
+        $user_reset['user'] = $user;	
 
-        $user_reset['jwt'] = $jwt;
+        foreach( $jwt as $item_key => $item_value ){
+        	$user_reset[$item_key] = $item_value;
+        }
+
+        //$user_reset['jwt'] = $jwt;
 
         return $this->create_response( $user_reset );
     }
@@ -362,5 +322,77 @@ class Litchi_REST_Social_Controller extends WP_REST_Controller
         $response = new WP_REST_Response();
         $response->set_data($return);
         return $response;
+    }
+
+    private function __generateJWT($user) {
+        
+        // generate & return jwt
+        $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : false;
+
+
+        /** If the authentication fails return a error*/
+        if (is_wp_error($user)) {
+            $error_code = $user->get_error_code();
+            return new WP_Error(
+                '[jwt_auth] ' . $error_code,
+                $user->get_error_message($error_code),
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
+        /** Valid credentials, the user exists create the according Token */
+        $issuedAt = time();
+        $notBefore = apply_filters('jwt_auth_not_before', $issuedAt, $issuedAt);
+        $expire = apply_filters('jwt_auth_expire', $issuedAt + (DAY_IN_SECONDS * 7), $issuedAt);
+
+        $token = array(
+            'iss' => get_bloginfo('url'),
+            'iat' => $issuedAt,
+            'nbf' => $notBefore,
+            'exp' => $expire,
+            'data' => array(
+                'user' => array(
+                    'id' => $user->data->ID,
+                ),
+            ),
+        );
+
+        /** Let the user modify the token data before the sign. */
+        $token = JWT::encode(apply_filters('jwt_auth_token_before_sign', $token, $user), $secret_key);
+
+
+        /** The token is signed, now create the object with no sensible user data to the client*/
+        $data = array(
+            'token' => $token,
+            'user_email' => $user->data->user_email,
+            'user_nicename' => $user->data->user_nicename,
+            'user_display_name' => $user->data->display_name,
+        );
+
+        /** Let the user modify the data before send it back */
+        $jwt = apply_filters('jwt_auth_token_before_dispatch', $data, $user);
+
+        return $jwt;
+    }
+
+    private function __generateBearerToken($user){
+        
+        require_once ABSPATH . 'wp-content/plugins/api-bearer-auth/db.php';
+	    $db = new API_Bearer_Auth_Db();
+        // Update access en refresh tokens
+        if (($result = $db->login($user->ID)) !== false) {
+           
+            return [
+                'access_token' => $result['access_token'],
+                'expires_in' => $result['expires_in'],
+                'refresh_token' => $result['refresh_token'],
+                //'issued_at' => time()
+            ];
+        }
+
+        return new WP_Error('api_api_bearer_auth_create_token',
+        __('Error creating tokens.', 'api_api_bearer'));
     }
 }
