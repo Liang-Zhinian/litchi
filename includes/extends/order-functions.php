@@ -160,8 +160,6 @@ add_filter( 'woocommerce_rest_prepare_shop_order',  'prepare_shop_orders_respons
  * @return WP_REST_Response
  */
 function prepare_shop_orders_response( $response, $post, $request ) {
-        
-    my_log_file($response->data);
 
     if( empty( $response->data ) )
         return $response;
@@ -178,7 +176,6 @@ function prepare_shop_orders_response( $response, $post, $request ) {
 }
 
 function get_customerMetaX($data,$field_name,$request) {
-    my_log_file($data);
 
     $customer    = new WC_Customer( $data['customer_id'] );
     $_data       = $customer->get_data();
@@ -188,7 +185,6 @@ function get_customerMetaX($data,$field_name,$request) {
 };
 
 function get_shippingMeta($data,$field_name,$request) {
-    my_log_file($data);
 
     $shipping = $data['shipping'];
     $shipping['phone'] = get_post_meta( $data[ 'id' ], '_'.$field_name."_phone", true );

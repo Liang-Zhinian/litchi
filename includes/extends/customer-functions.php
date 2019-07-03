@@ -260,7 +260,8 @@ function prepare_customers_response( $response/*, $user, $request*/ ) {
         $packages_reset[$author_id]['contents'][] = $cart_item;
 
 
-        $store = litchi()->vendor->get( $author_id );
+        $vendor = new Litchi_Vendor_Manager();
+        $store = $vendor->get( $author_id );
         $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
         
         $cart_item['store'] = array(

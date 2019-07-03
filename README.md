@@ -1,4 +1,0 @@
-litchi
-==================
-
-A woocommerce plugin

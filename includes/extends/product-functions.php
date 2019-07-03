@@ -82,7 +82,8 @@ function filter_woocommerce_api_product_response( $product_data, $product, $fiel
 
     $author_id = get_post_field( 'post_author', $product_data['id'] );
 
-    $store = litchi()->vendor->get( $author_id );
+    $vendor = new Litchi_Vendor_Manager();
+    $store = $vendor->get( $author_id );
     // $the_user = get_user_by( 'id', $author_id );;
 
     
@@ -113,7 +114,8 @@ function prepeare_product_response( $response, $object, $request ) {
     $data = $response->get_data();
     $author_id = get_post_field( 'post_author', $data['id'] );
 
-    $store = litchi()->vendor->get( $author_id );
+    $vendor = new Litchi_Vendor_Manager();
+    $store = $vendor->get( $author_id );
     // $the_user = get_user_by( 'id', $author_id );;
     
     $store_logo = $WCFM->wcfm_vendor_support->wcfm_get_vendor_logo_by_vendor( $author_id );
