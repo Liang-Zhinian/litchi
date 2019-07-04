@@ -196,6 +196,9 @@ class Litchi {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
+		
+		$this->loader->add_filter( 'plugin_action_links_litchi', $plugin_admin, 'plugin_action_links' );
+
 	}
 
 	/**
