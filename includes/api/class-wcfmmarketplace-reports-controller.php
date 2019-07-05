@@ -96,7 +96,9 @@ class Litchi_REST_Wcfmmp_Reports_Controller extends WP_REST_Controller {
         $main_chart = $wcfm_report_sales_by_date->get_main_chart(0);
 */
         
-        include_once( constant("LITCHI_INC_DIR") . '/class-wcfmmp-reports.php' );
+        
+        $inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ;                  
+        require_once $inc_dir. 'class-wcfmmp-reports.php';  
 
         $wcfm_report_sales_by_date = new WCFMMP_Report_Sales_By_Date( 'month' );
         $wcfm_report_sales_by_date->calculate_current_range( 'month' );        

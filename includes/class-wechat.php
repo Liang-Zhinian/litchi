@@ -13,6 +13,8 @@
         public function __construct($info) {
             //生成配置参数
             $this->_makeConfig($info);
+            
+
         }
 
         /*
@@ -60,11 +62,13 @@
                 //预支付完成,在下方进行自己内部的业务逻辑
                 /*****************************/
                 //return json_encode($json);
+
             }
             else{
                 $array['success'] = 0;
                 $array['error'] = $array['return_msg'];
                 //return json_encode($json);
+
             }
     
 

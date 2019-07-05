@@ -1,12 +1,13 @@
 <?php
 
-interface ILogHandler
+
+interface IMyLogFileHandler
 {
 	public function write($msg);
 	
 }
 
-class CLogFileHandler implements ILogHandler
+class MyLogFileHandler implements IMyLogFileHandler
 {
 	private $handle = null;
 	
@@ -26,7 +27,7 @@ class CLogFileHandler implements ILogHandler
 	}
 }
 
-class Log
+class Logger
 {
 	private $handler = null;
 	private $level = 15;
@@ -49,22 +50,11 @@ class Log
 		}
 		return self::$instance;
 	}
-	
-	// public static function Init($level = 15) {
-	// 	if(!self::$instance instanceof self)
-	// 	{
-	// 		self::$instance = new self();
-	// 		self::$instance->__setHandle(new CLogFileHandler(plugin_dir_path(__FILE__) . "logs/" . date('Y-m-d') . '.log'));
-	// 		self::$instance->__setLevel($level);
-	// 	}
-	// 	return self::$instance;
-		
-	// }
 
-	public static function DefaultLogFileHandler(){
-		self::$defaultLogFileHandler = new CLogFileHandler(plugin_dir_path( dirname( __FILE__ ) ) . "logs/" . date('Y-m-d') . '.log');
-		return self::$defaultLogFileHandler; 
-	}
+	public static function DefaultLogFileHandler(){ 		
+self::$defaultLogFileHandler = new MyLogFileHandler (plugin_dir_path( dirname( __FILE__ ) ) . "logs/" . date('Y-m-d') . '.log'); 		
+return self::$defaultLogFileHandler;  	
+}
 	
 	private function __setHandle($handler){
 		$this->handler = $handler;

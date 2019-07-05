@@ -52,7 +52,7 @@ class Litchi_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-		
+		/*
 			// Initialize Settings
 			require_once(sprintf("%s/settings.php", dirname(__FILE__)));
 			$WP_Plugin_Template_Settings = new WP_Plugin_Template_Settings();
@@ -60,9 +60,9 @@ class Litchi_Admin {
 			// Register custom post types
 			require_once(sprintf("%s/post-types/post_type_template.php", dirname(__FILE__)));
 			$Post_Type_Template = new Post_Type_Template();
-
+*/
 			
-			//add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array( $this, 'plugin_action_links' ) );
+
 	}
 
 	

@@ -131,15 +131,16 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                 try {
                     $order = new WC_Order( $out_trade_no );
                     if ($order) {
-                        $order -> set_payment_method( "wx" );
-                        $order -> set_payment_method_title( "Wechat Pay" );
+                        $order -> set_payment_method( "WXPay" );
+                        $order -> set_payment_method_title( "Wechat Payment" );
                         $order -> set_transaction_id( $transaction_id );
                         $order -> add_order_note( __('Wechat payment completed', 'woothemes') );
-                        
-                        if ( 'processing' == $order->status) {
-                            $order->update_status( 'completed' );
-                        }
         
+
+  if ( 'processing' == $order->status) {
+    $order->update_status( 'completed' );
+  }
+
                         // Mark as on-hold (we're awaiting the cheque)
                         $order -> payment_complete();
                     
