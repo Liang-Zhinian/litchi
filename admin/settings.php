@@ -20,7 +20,9 @@ if(!class_exists('WP_Plugin_Template_Settings'))
         {
         	// register your plugin's settings
         	register_setting('wp_plugin_template-group', 'setting_a');
-        	register_setting('wp_plugin_template-group', 'setting_b');
+            register_setting('wp_plugin_template-group', 'setting_b');
+            
+        	register_setting('wp_plugin_template-group', 'litchi_setting_add_additional_order_status');
 
         	// add your settings section
         	add_settings_section(
@@ -51,6 +53,17 @@ if(!class_exists('WP_Plugin_Template_Settings'))
                     'field' => 'setting_b'
                 )
             );
+            
+            add_settings_field(
+                'wp_plugin_template-litchi_setting_add_additional_order_status', 
+                'Add additional order status', 
+                array(&$this, 'settings_field_checkbox'), 
+                'wp_plugin_template', 
+                'wp_plugin_template-section',
+                array(
+                    'field' => 'litchi_setting_add_additional_order_status'
+                )
+            );
             // Possibly do additional admin_init tasks
         } // END public static function activate
         
@@ -59,6 +72,19 @@ if(!class_exists('WP_Plugin_Template_Settings'))
             // Think of this as help text for the section.
             echo 'These settings do things for the WP Plugin Template.';
         }
+        
+        /**
+         * This function provides checkbox inputs for settings fields
+         */
+        public function settings_field_checkbox($args)
+        {
+            // Get the field name from the $args array
+            $field = $args['field'];
+            // Get the value of this setting
+            $value = get_option($field);
+            // echo a proper input type="checkbox"
+            echo sprintf('<input type="checkbox" name="%s" id="%s" value="%s" />', $field, $field, $value);
+        } // END public function settings_field_input_text($args)
         
         /**
          * This function provides text inputs for settings fields
