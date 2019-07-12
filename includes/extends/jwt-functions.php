@@ -3,8 +3,10 @@
 
 use \Firebase\JWT\JWT;
 
-add_filter( "jwt_auth_token_before_dispatch", "my_jwt_auth_token_before_dispatch", 10, 2 );
-add_filter( "jwt_auth_token_before_sign", "my_jwt_auth_token_before_sign", 10, 2 );
+if (class_exists('Jwt_Auth_Public')) {
+    add_filter( "jwt_auth_token_before_dispatch", "my_jwt_auth_token_before_dispatch", 10, 2 );
+    add_filter( "jwt_auth_token_before_sign", "my_jwt_auth_token_before_sign", 10, 2 );
+}
 
 function my_jwt_auth_token_before_sign($token, $user){
     global $wpdb;
@@ -66,7 +68,11 @@ function save_token($data, $user) {
 	try{
         //$secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : false;
         //$access_token = JWT::decode($data['token'], $secret_key);
-        $refresh_token = generate_refresh_token();
+        $refresh_token = $data['refresh_token'];
+        if ($refresh_token == null) {
+            $refresh_token = generate_refresh_token();
+        }
+        
         $user_id = $user->data->ID;
 
         if ($wpdb->query($wpdb->prepare("INSERT INTO " . $wpdb->base_prefix . "user_tokens
@@ -107,3 +113,18 @@ function generate_refresh_token(){
 
 }
 
+
+if (class_exists('API_Bearer_Auth')) {
+    add_filter('api_bearer_auth_unauthenticated_urls', 'api_bearer_auth_unauthenticated_urls_filter', 10, 2);
+}
+function api_bearer_auth_unauthenticated_urls_filter($custom_urls, $request_method) {
+    switch ($request_method) {
+        case 'POST':
+            $custom_urls[] = '/wp-json/litchi/v1/social/login/?';
+        break;
+        case 'GET':
+            $custom_urls[] = '/wp-json/wp/v2/comments/?';
+        break;
+    }
+    return $custom_urls;
+}

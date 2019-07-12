@@ -74,7 +74,18 @@ class Litchi_REST_JWT_Controller extends WP_REST_Controller {
 
     } // register_routes()
 
-    public function refresh_token(WP_REST_Request $request){   
+    public function refresh_token(WP_REST_Request $request){  
+        $secret_key = defined('JWT_AUTH_SECRET_KEY') ? JWT_AUTH_SECRET_KEY : false;
+        /** First thing, check the secret key if not exist return a error*/
+        if (!$secret_key) {
+            return new WP_Error(
+                'jwt_auth_bad_config',
+                __('JWT is not configurated properly, please contact the admin', 'wp-api-jwt-auth'),
+                array(
+                    'status' => 403,
+                )
+            );
+        } 
         $body = $request->get_json_params();
 
         $user_id = $this->get_user_id_from_refresh_token($body['token']);
@@ -129,6 +140,7 @@ class Litchi_REST_JWT_Controller extends WP_REST_Controller {
             'user_email' => $user->data->user_email,
             'user_nicename' => $user->data->user_nicename,
             'user_display_name' => $user->data->display_name,
+            'refresh_token' => $body['token']
         );
 
         /** Let the user modify the data before send it back */
@@ -140,6 +152,11 @@ class Litchi_REST_JWT_Controller extends WP_REST_Controller {
         return $wpdb->get_var($wpdb->prepare('SELECT user_id
             FROM ' . $wpdb->base_prefix . 'user_tokens
             WHERE refresh_token = %s', $token));
+    }
+
+    private function generate_refresh_token(){
+        return bin2hex(openssl_random_pseudo_bytes(32));
+    
     }
 
 }

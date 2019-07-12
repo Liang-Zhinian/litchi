@@ -1,0 +1,4 @@
+1. 使用Poedit软件修改default.po文件，保存后生成default.mo，最后把default.po重命名为litchi-zh_CN.mo即可。
+
+2. languages文件夹以及它里面的文件的权限必须是775：
+#sudo chmod -R 775 languages

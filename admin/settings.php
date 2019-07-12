@@ -79,13 +79,24 @@ if(!class_exists('WP_Plugin_Template_Settings'))
         public function add_menu()
         {
             // Add a page to manage this plugin's settings
-        	add_options_page(
-        	    'WP Plugin Template Settings', 
-        	    'WP Plugin Template', 
-        	    'manage_options', 
-        	    'wp_plugin_template', 
-        	    array(&$this, 'plugin_settings_page')
-        	);
+        	// add_options_page(
+        	//     'WP Plugin Template Settings', 
+        	//     'WP Plugin Template', 
+        	//     'manage_options', 
+        	//     'wp_plugin_template', 
+        	//     array(&$this, 'plugin_settings_page')
+            // );
+            
+            $title = sprintf( esc_attr__( 'Getting Started with %s', 'litchi' ), esc_html__( 'Litchi', 'litchi' ) );
+
+			add_menu_page(
+				$title,
+				esc_html__( 'Litchi', 'litchi' ),
+				apply_filters( 'litchi_screen_capability', 'manage_options' ),
+				'litchi-getting-started',
+				array( $this, 'plugin_settings_page' ),
+				'dashicons-cart'
+			);
         } // END public function add_menu()
     
         /**

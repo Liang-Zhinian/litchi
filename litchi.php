@@ -37,6 +37,23 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'LITCHI_VERSION', '1.0.0' );
 
+$inc_dir = plugin_dir_path( __FILE__ ) . 'includes/';
+require_once $inc_dir. 'log.php';
+Logger::Init( Logger::DefaultLogFileHandler(), 15);
+
+//add_action( 'woocommerce_loaded', 'init_hooks' );
+
+function init_hooks() {
+	Logger::DEBUG(" Litchi -> init_hooks: " . 'plugin_action_links_' . plugin_basename(__FILE__));
+	add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'plugin_action_links' );
+}
+
+// Add the settings link to the plugins page
+function plugin_action_links( $links_array ){
+	array_unshift( $links_array, '<a href="#">Settings</a>' );
+	return $links_array;
+}
+
 /**
  * The code that runs during plugin activation.
  * This action is documented in includes/class-litchi-activator.php

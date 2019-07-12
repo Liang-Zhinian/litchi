@@ -277,22 +277,40 @@ function my_custom_admin_css() {
 
 // Register new status
 function register_additional_order_status() {
+    register_post_status( 'wc-paid', array(
+        'label'                     => __('Paid', 'litchi'),
+        'public'                    => true,
+        'exclude_from_search'       => false,
+        'show_in_admin_all_list'    => true,
+        'show_in_admin_status_list' => true,
+        'label_count'               => __( 'Paid (%s)', 'litchi' )
+    ) );
+
     register_post_status( 'wc-awaiting-shipment', array(
         'label'                     => 'Awaiting shipment',
         'public'                    => true,
         'exclude_from_search'       => false,
         'show_in_admin_all_list'    => true,
         'show_in_admin_status_list' => true,
-        'label_count'               => _n_noop( 'Awaiting shipment (%s)', 'Awaiting shipment (%s)' )
+        'label_count'               => __( 'Awaiting shipment (%s)', 'litchi' )
     ) );
 
     register_post_status( 'wc-shipped', array(
-        'label'                     => 'Shipped',
+        'label'                     => __('Shipped', 'litchi'),
         'public'                    => true,
         'exclude_from_search'       => false,
         'show_in_admin_all_list'    => true,
         'show_in_admin_status_list' => true,
-        'label_count'               => _n_noop( 'Shipped (%s)', 'Shipped (%s)' )
+        'label_count'               => __( 'Shipped (%s)', 'litchi' )
+    ) );
+
+    register_post_status( 'wc-arrival-shipment', array(
+        'label'                     => __( 'Shipment Arrival'),
+        'public'                    => true,
+        'show_in_admin_status_list' => true,
+        'show_in_admin_all_list'    => true,
+        'exclude_from_search'       => false,
+        'label_count'               => __( 'Shipment Arrival <span class="count">(%s)</span>', 'litchi' )
     ) );
 }
 add_action( 'init', 'register_additional_order_status' );
@@ -308,8 +326,10 @@ function add_additional_order_statuses( $order_statuses ) {
         $new_order_statuses[ $key ] = $status;
  
         if ( 'wc-processing' === $key ) {
-            $new_order_statuses['wc-awaiting-shipment'] = 'Awaiting shipment';
-            $new_order_statuses['wc-shipped'] = 'Shipped';
+            $new_order_statuses['wc-paid'] = __('Paid', 'litchi');
+            $new_order_statuses['wc-awaiting-shipment'] = __('Awaiting shipment', 'litchi');
+            $new_order_statuses['wc-shipped'] = __('Shipped', 'litchi');
+            $new_order_statuses['wc-arrival-shipment'] = __('Shipment Arrival', 'litchi');
         }
  
         // if ( 'wc-awaiting-shipment' === $key ) {
@@ -320,6 +340,18 @@ function add_additional_order_statuses( $order_statuses ) {
     return $new_order_statuses;
 }
 add_filter( 'wc_order_statuses', 'add_additional_order_statuses' );
+
+function sv_add_my_account_order_actions( $actions, $order ) {
+
+    $actions['help'] = array(
+        // adjust URL as needed
+        'url'  => '/contact/?&order=' . $order->get_order_number(),
+        'name' => __( 'Get Help', 'my-textdomain' ),
+    );
+
+    return $actions;
+}
+add_filter( 'woocommerce_my_account_my_orders_actions', 'sv_add_my_account_order_actions', 10, 2 );
 
 
 ///////////////////////////////////////////
