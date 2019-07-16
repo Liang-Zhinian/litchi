@@ -119,11 +119,15 @@ if (class_exists('API_Bearer_Auth')) {
 }
 function api_bearer_auth_unauthenticated_urls_filter($custom_urls, $request_method) {
     switch ($request_method) {
-        case 'POST':
-            $custom_urls[] = '/wp-json/litchi/v1/social/login/?';
+        case 'POST':            
+            $custom_urls[] = '/wp-json/litchi/v1/social/login/?';            
+            $custom_urls[] = '/wp-json/wp/v2/users/register/?';        
+            $custom_urls[] = '/wp-json/litchi/v1/wx/pay/notify/?';
+			
         break;
         case 'GET':
             $custom_urls[] = '/wp-json/wp/v2/comments/?';
+	        $custom_urls[] = '/wp-json/litchi/v1/wx/pay/unifiedorder/?';
         break;
     }
     return $custom_urls;

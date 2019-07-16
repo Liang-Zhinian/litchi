@@ -59,7 +59,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 					'description' => __( '商品描述', 'woocommerce' ),
                     'required' => true,
                     'type'     => 'string',
-				),
+				), 
 				'out_trade_no' => array(
 					'description' => __( '商户订单号', 'woocommerce' ),
                     'required' => true,
@@ -131,18 +131,19 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                 try {
                     $order = new WC_Order( $out_trade_no );
                     if ($order) {
-                        $order -> set_payment_method( "WXPay" );
-                        $order -> set_payment_method_title( "Wechat Payment" );
+                        $order -> set_payment_method( __("WXPay", 'litchi') );
+                        $order -> set_payment_method_title( __("Wechat Payment", 'litchi') );
                         $order -> set_transaction_id( $transaction_id );
-                        $order -> add_order_note( __('Wechat payment completed', 'woothemes') );
+                        $order -> add_order_note( __('Wechat payment completed', 'litchi') );
         
 
-  if ( 'processing' == $order->status) {
-    $order->update_status( 'completed' );
-  }
+                        if ( 'pending' == $order->status) {
+                            $order->update_status( 'paid' );
+                            $order->update_status( 'awaiting-shipment' );
+                        }
 
                         // Mark as on-hold (we're awaiting the cheque)
-                        $order -> payment_complete();
+                        //$order -> payment_complete();
                     
                         Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): ORDER PAID");
                         exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>");
