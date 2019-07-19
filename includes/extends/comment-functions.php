@@ -3,7 +3,8 @@
 /* 
 	由于rest api: 
 	/wp-json/wp/v2/comments
-	不能返回、保存或者修改meta，因此需要修复这个缺陷
+	不能返回、保存或者修改meta，因此需要修复这个缺陷;
+	meta中的attachment_type和attachment_url支持数组保存，暂时使用逗号分隔
 */
 
 // 查询时返回meta数据
@@ -22,7 +23,8 @@ function my_rest_after_insert_comment($comment, $request, $creating){
 	$metas = $request['meta'];
 	
 	foreach ( array_keys( $metas ) as $key ) {
-		$value = sanitize_text_field( $metas[$key][0] );
+		// $value = sanitize_text_field( $metas[$key][0] );		
+		$value = sanitize_text_field( join(",",$metas[$key]) );
 		
 		if ($creating) {
 		    add_comment_meta($comment_ID, $key, $value);

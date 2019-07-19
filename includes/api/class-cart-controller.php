@@ -8,7 +8,7 @@
 * @author 
 */
 
-class Litchi_REST_Product_Controller extends WP_REST_Controller {
+class Litchi_REST_Cart_Controller extends WP_REST_Controller {
 
     /**
      * Endpoint namespace

@@ -216,7 +216,7 @@ function update_customerShippingListMeta($value,$data,$field_name) {
 ////////////////////////////// shopping cart /////////////////////////////////////////////
 
 /* add shopping cart attribute to customer response */
-add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
+add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response', 10, 3 );
 /**
  * Add extra fields in customers response.
  *
@@ -225,22 +225,18 @@ add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' )
  *
  * @return WP_REST_Response
  */
-function prepare_customers_response( $response/*, $user, $request*/ ) {
-    // Reset the packages
-    $packages_reset = array();
-
+function prepare_customers_response( $response, $user, $request ) {
     global $WCFM, $wpdb;
     $data = $response->get_data();
 
     $cart = get_user_meta( $data[ 'id' ], '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
-
-    /*
-    foreach(array_keys( $cart ) as $field){
-        $packages_reset[$field] = $cart[$field];
-    }
     
     $cart = $cart['cart'];
+
         
+    // Reset the packages
+    $packages_reset = array();
+
     foreach(array_keys( $cart ) as $field) {
         $cart_item = $cart[$field];
         $product_id = $cart_item['product_id'];
@@ -287,10 +283,12 @@ function prepare_customers_response( $response/*, $user, $request*/ ) {
         );
         // $cart[$field] = $cart_item;
     }
-*/
-    $response->data['cart']       =  $cart; //$packages_reset;
+
+    $response->data['cart']       =  $packages_reset;
+    $response -> data['display_name'] = $user->display_name;
 
     return $response;
+
 }
 /* end add shopping cart attribute to customer response */
 

@@ -25,11 +25,13 @@ class Litchi_API_Manager {
         // require_once LITCHI_DIR . '/includes/api/admin/class-admin-controller.php';
 
         $this->class_map = apply_filters( 'litchi_rest_api_class_map', array(
-            $inc_dir . 'api/class-cart-controller.php'                 => 'Litchi_REST_Product_Controller',
+            $inc_dir . 'api/class-cart-controller.php'                 => 'Litchi_REST_Cart_Controller',
             $inc_dir . 'api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
             $inc_dir . 'api/class-wechat-controller.php'                 => 'Litchi_REST_WeChat_Controller',
             $inc_dir . 'api/class-wcfmmarketplace-reports-controller.php'                 => 'Litchi_REST_Wcfmmp_Reports_Controller',
             $inc_dir . 'api/class-jwt-controller.php'                 => 'Litchi_REST_JWT_Controller',
+            $inc_dir . 'api/class-media-controller.php'                 => 'Litchi_REST_Media_Controller',
+            $inc_dir . 'api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',
             
         ) );
 
