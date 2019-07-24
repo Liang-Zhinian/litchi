@@ -31,6 +31,12 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
      */
     protected $post_type = 'wx';
 
+    
+    const     APP_ID             = 'wx31b39f96354ce469'; //公众账号ID
+    const     MCH_ID             = '1533699341'; //商户号
+    const     APP_SECRET             = 'e016d201ac78738732643adf5f105e6a'; //APP秘钥
+    const     API_SECRET = 'EFOJJXFTSCTRWZJUIE3DTCOMCJETESOL';
+
     /**
      * Constructor function
      *
@@ -94,6 +100,31 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                 // 'permission_callback' => array( $this, 'get_product_summary_permissions_check' ),,
             ),
         ) );
+
+        
+        // GET: /wp-json/litchi/v1/wx/pay/orders
+        register_rest_route( $this->namespace, '/' . $this->base . '/pay/orders', array(
+			'args' => array(
+				'transaction_id' => array(
+					'description' => __( 'transaction_id', 'litchi' ),
+                    'required' => false,
+                    'type'     => 'string',
+                ),
+                'out_trade_no' => array(
+					'description' => __( 'out_trade_no', 'litchi' ),
+                    'required' => false,
+                    'type'     => 'string',
+                ),
+			),
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'queryOrder' ),
+				// 'permission_callback' => array( $this, 'get_item_permissions_check' ),
+				'args'                => array(
+					'context' => $this->get_context_param( array( 'default' => 'view' ) ),
+				),
+			),
+        ) );
     } // register_routes()
 
     public function notify(){                
@@ -110,53 +141,21 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 
         if($result){                  
             //如果成功返回了                  
-            if($result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS'){                  
-                //进行改变订单状态等操作。。。。                   
+            if($result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS'){  
+                if ($result['trade_state'] == 'SUCCESS') {                
+                    //进行改变订单状态等操作。。。。                   
 
-                
-                $cash_fee = $result["cash_fee"];
-                $fee_type = $result["fee_type"];
-                $is_subscribe = $result["is_subscribe"];
-                $mch_id = $result["mch_id"];
-                $nonce_str = $result["nonce_str"];
-                $openid = $result["openid"];
-                $out_trade_no = $result["out_trade_no"];
-                $result_code = $result["result_code"];
-                $return_code = $result["return_code"];
-                $sign = $result["sign"];
-                $time_end = $result["time_end"];
-                $total_fee = $result["total_fee"];
-                $transaction_id = $result['transaction_id'];
+                    $order = $this -> setOrderAsPaid($result);
 
-                try {
-                    $order = new WC_Order( $out_trade_no );
                     if ($order) {
-                        $order -> set_payment_method( __("WXPay", 'litchi') );
-                        $order -> set_payment_method_title( __("Wechat Payment", 'litchi') );
-                        $order -> set_transaction_id( $transaction_id );
-                        $order -> add_order_note( __('Wechat payment completed', 'litchi') );
-        
-
-                        if ( 'pending' == $order->status) {
-                            $order->update_status( 'paid' );
-                            $order->update_status( 'awaiting-shipment' );
-                        }
-
-                        // Mark as on-hold (we're awaiting the cheque)
-                        //$order -> payment_complete();
-                    
+                        
                         Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): ORDER PAID");
                         exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>");
                     }
                     Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): ORDER NOT FOUND" );                         
                     exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>"); 
-
-                } catch (Exception $e) {
-                    Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): GET ORDER ERROR => ".$e->getMessage());
-                    exit();
                 }
-       
-     
+
             }
         	
 	        Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): WX POST DATA ERROR" ); 
@@ -190,7 +189,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
             );
                   
 
-        $wx = new Litchi_WeChat($order_info);
+        $wx = new Litchi_WeChat(self::APP_ID, self::MCH_ID, self::API_SECRET, self::APP_SECRET, $order_info);
 
 
 
@@ -198,5 +197,81 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
         
 		return new WP_REST_Response( $wx_return_data, 200 );
     } // END unifiedorder()
+
+    public function queryOrder( $request = array() ) {
+        
+        $inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ;                  
+        require_once $inc_dir. 'vendor/WxPay/WxPay.Api.php';                  
+        require_once $inc_dir. 'vendor/WxPay/WxPay.Config.php';            
+        require_once $inc_dir. 'vendor/WxPay/WxPay.Data.php';
+
+        $params = $request->get_params();
+        $transaction_id = $params['transaction_id'];
+        $out_trade_no = $params['out_trade_no'];
+
+        $config = new WxPayConfig(self::APP_ID, self::MCH_ID, self::API_SECRET);
+        $input = new WxPayOrderQuery();
+
+        if (!empty($transaction_id))
+            $input->SetTransaction_id($transaction_id);
+        else if  (!empty($out_trade_no))
+            $input->SetOut_trade_no($out_trade_no);
+
+        $result = WxPayApi::orderQuery($input, $config);
+
+        if ($result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS') {
+            if ($result['trade_state'] == 'SUCCESS') { 
+                $this -> setOrderAsPaid($result);
+            }
+        }
+
+        return $result;
+    }
+
+    private function setOrderAsPaid( $wx_order = 0) {
+        try {
+            $cash_fee = $wx_order["cash_fee"];
+            $fee_type = $wx_order["fee_type"];
+            $is_subscribe = $wx_order["is_subscribe"];
+            $mch_id = $wx_order["mch_id"];
+            $nonce_str = $wx_order["nonce_str"];
+            $openid = $wx_order["openid"];
+            $out_trade_no = $wx_order["out_trade_no"];
+            $result_code = $wx_order["result_code"];
+            $return_code = $wx_order["return_code"];
+            $sign = $wx_order["sign"];
+            $time_end = $wx_order["time_end"];
+            $total_fee = $wx_order["total_fee"];
+            $transaction_id = $wx_order['transaction_id'];
+            
+            $order = new WC_Order( $out_trade_no );
+            if ($order) {
+
+
+                if ( 'pending' == $order->status ) {
+                    $order -> set_payment_method( __("WXPay", 'litchi') );
+                    $order -> set_payment_method_title( __("Wechat Payment", 'litchi') );
+                    $order -> set_transaction_id( $transaction_id );
+                    $order -> add_order_note( __('Wechat payment completed', 'litchi') );
+                    $order->update_status( 'paid' );
+                    $order->update_status( 'awaiting-shipment' );
+                }
+
+                // Mark as on-hold (we're awaiting the cheque)
+                //$order -> payment_complete();
+            
+                Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): ORDER PAID");
+                //exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>");
+
+                return $order;
+            }
+            Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): ORDER NOT FOUND" );                         
+            //exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>"); 
+
+        } catch (Exception $e) {
+            Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): GET ORDER ERROR => ".$e->getMessage());
+            exit();
+        }
+    }
     
 }

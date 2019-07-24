@@ -81,7 +81,11 @@ class Litchi {
 		} else {
 			$this->version = '1.0.0';
 		}
-		$this->plugin_name = 'litchi';
+		if ( defined( 'PLUGIN_NAME' ) ) {
+			$this->plugin_name = PLUGIN_NAME;
+		} else {
+			$this->plugin_name = 'litchi';
+		}
 
 		$this->load_dependencies();
 		$this->set_locale();
@@ -147,7 +151,6 @@ class Litchi {
 		require_once $inc_dir . 'class-api-manager.php';
 		
 		require_once $inc_dir . 'class-wechat.php';
-		// require_once $inc_dir . 'log.php';
 
 		$this -> init_classes() ;
 
@@ -163,6 +166,7 @@ class Litchi {
 	private function init_classes() {
 		//$this->container['vendor']        = new Litchi_Vendor_Manager();
 		$this->container['api']           = new Litchi_API_Manager();
+
 	}
 
 	/**

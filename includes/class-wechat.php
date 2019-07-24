@@ -3,14 +3,18 @@
         微信支付类
     */
     class Litchi_WeChat {
-        const     APP_ID             = 'wx31b39f96354ce469'; //公众账号ID
-        const     MCH_ID             = '1533699341'; //商户号
-        const     APP_SECRET             = 'e016d201ac78738732643adf5f105e6a'; //APP秘钥
-        const     API_SECRET = 'EFOJJXFTSCTRWZJUIE3DTCOMCJETESOL';
+        private $APP_ID             = ''; //公众账号ID
+        private $MCH_ID             = ''; //商户号
+        private $APP_SECRET             = ''; //APP秘钥
+        private $API_SECRET = '';
         const     URL             = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
         private $_config         = array();
 
-        public function __construct($info) {
+        public function __construct($APPID, $MCHID, $KEY, $APPSECRET, $info) {
+            $this -> APP_ID = $APPID;
+            $this -> MCH_ID = $MCHID;
+            $this -> API_SECRET = $KEY;
+            $this -> APP_SECRET = $APPSECRET;
             //生成配置参数
             $this->_makeConfig($info);
             
@@ -98,8 +102,8 @@
 
             //固定参数
             $fix_config         = array(
-                'appid'                 => strtolower(self::APP_ID),
-                'mch_id'                 => strtolower(self::MCH_ID),
+                'appid'                 => strtolower($this -> APP_ID),
+                'mch_id'                 => strtolower($this -> MCH_ID),
                 'nonce_str'             => strtolower($this->_createNoncestr()),
                 'spbill_create_ip'         => strtolower($_SERVER["REMOTE_ADDR"]/*get_client_ip()*/),
                 'trade_type'             => 'APP',
@@ -153,7 +157,7 @@
             }
 
             //拼接API密钥
-            $str_config             .= 'key=' . self::API_SECRET;
+            $str_config             .= 'key=' . $this -> API_SECRET;
 
             //md5 加密，并转为大写
             $sign_info                  = strtoupper(md5($str_config));
@@ -176,7 +180,7 @@
 
 
             //签名步骤二：在string后加入KEY
-            $String = $String."&key=" . self::API_SECRET;
+            $String = $String."&key=" . $this -> API_SECRET;
 
             //签名步骤三：MD5加密
 

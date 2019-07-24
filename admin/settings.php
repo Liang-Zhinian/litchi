@@ -10,8 +10,14 @@ if(!class_exists('WP_Plugin_Template_Settings'))
 		{
 			// register actions
             add_action('admin_init', array(&$this, 'admin_init'));
-        	add_action('admin_menu', array(&$this, 'add_menu'));
-		} // END public function __construct
+            add_action('admin_menu', array(&$this, 'add_menu'));
+            
+            $this -> enable_wx_pay = $this.get_option('litchi_setting_enable_wx_payment');
+        } // END public function __construct
+        
+        public function get_enable_wx_pay(){
+            return $this -> enable_wx_pay;
+        }
 		
         /**
          * hook into WP's admin_init action hook
@@ -22,7 +28,9 @@ if(!class_exists('WP_Plugin_Template_Settings'))
         	register_setting('wp_plugin_template-group', 'setting_a');
             register_setting('wp_plugin_template-group', 'setting_b');
             
-        	register_setting('wp_plugin_template-group', 'litchi_setting_add_additional_order_status');
+            register_setting('wp_plugin_template-group', 'litchi_setting_add_additional_order_status');
+            
+        	register_setting('wp_plugin_template-group', 'litchi_setting_enable_wx_payment');
 
         	// add your settings section
         	add_settings_section(
@@ -64,6 +72,17 @@ if(!class_exists('WP_Plugin_Template_Settings'))
                     'field' => 'litchi_setting_add_additional_order_status'
                 )
             );
+            
+            add_settings_field(
+                'wp_plugin_template-litchi_setting_enable_wx_payment', 
+                'Enable WeChat Payment', 
+                array(&$this, 'settings_field_checkbox'), 
+                'wp_plugin_template', 
+                'wp_plugin_template-section',
+                array(
+                    'field' => 'litchi_setting_enable_wx_payment'
+                )
+            );
             // Possibly do additional admin_init tasks
         } // END public static function activate
         
@@ -83,8 +102,8 @@ if(!class_exists('WP_Plugin_Template_Settings'))
             // Get the value of this setting
             $value = get_option($field);
             // echo a proper input type="checkbox"
-            echo sprintf('<input type="checkbox" name="%s" id="%s" value="%s" />', $field, $field, $value);
-        } // END public function settings_field_input_text($args)
+            echo sprintf('<input type="checkbox" name="%s" id="%s" value="1" ' . checked( 1, $value, false ) . ' />', $field, $field);
+        } // END public function settings_field_checkbox($args)
         
         /**
          * This function provides text inputs for settings fields

@@ -64,26 +64,68 @@ class Litchi_REST_Media_Controller extends WP_REST_Attachments_Controller {
      */
     public function register_routes() {
 		
-		// POST: /wp-json/litchi/v1/media/add
+		// POST: /wp-json/litchi/v1/media/add-image
 		
-		register_rest_route( $this->namespace, '/' . $this->base . '/add', array(
+		register_rest_route( $this->namespace, '/' . $this->base . '/add-image', array(
 			'methods'             => WP_REST_Server::CREATABLE,
-			'callback'            => array( $this, 'create_item_x' ),
-            'permission_callback' => array( $this, 'create_item_permissions_check' ),
+			'callback'            => array( $this, 'create_image' ),
+         'permission_callback' => array( $this, 'create_item_permissions_check' ),
+			'args' => array(
+			)
+		) );
+		
+		
+		// POST: /wp-json/litchi/v1/media/add-video
+		
+		register_rest_route( $this->namespace, '/' . $this->base . '/add-video', array(
+			'methods'             => WP_REST_Server::CREATABLE,
+			'callback'            => array( $this, 'create_video' ),
+         'permission_callback' => array( $this, 'create_item_permissions_check' ),
 			'args' => array(
 			)
 		) );
     } // register_routes()
 	
-	public function create_item_x( WP_REST_Request $request ) {
+	public function create_image( WP_REST_Request $request ) {
 		$current_user_id = get_current_user_id();
 
 		if ( empty( $current_user_id ) ) {
 			return new WP_Error( 'rest_not_logged_in', __( 'You are not currently logged in.' ), array( 'status' => 401 ) );
 		}
 
-		//$user     = wp_get_current_user();
+		$user     = wp_get_current_user();
 		return parent::create_item($request);
+	}
+	
+	public function create_video( WP_REST_Request $request ) {
+		$current_user_id = get_current_user_id();
+
+		if ( empty( $current_user_id ) ) {
+			return new WP_Error( 'rest_not_logged_in', __( 'You are not currently logged in.' ), array( 'status' => 401 ) );
+		}
+
+		$files   = $request->get_file_params();
+		$headers = $request->get_headers();
+		
+		$att = array();
+
+		if ( ! empty( $files ) ) {
+			$file['file'] = $files['cover'];
+			$request->set_file_params($file);
+			$cover = parent::create_item($request);
+			
+			
+			$file['file'] = $files['video'];
+			$request->set_file_params($file);
+			$video = parent::create_item($request);
+			
+			$att['cover'] = $cover->get_data();
+			$att['video'] = $video->get_data();
+		}
+		
+		//$files   = $request->get_file_params();
+		
+		return $att;
 	}
 	
 	public function create_item_permissions_check($request) {

@@ -36,6 +36,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Rename this for your plugin and update it as you release new versions.
  */
 define( 'LITCHI_VERSION', '1.0.0' );
+define( 'PLUGIN_NAME', 'litchi' );
 
 $inc_dir = plugin_dir_path( __FILE__ ) . 'includes/';
 require_once $inc_dir. 'log.php';
@@ -52,6 +53,23 @@ function init_hooks() {
 function plugin_action_links( $links_array ){
 	array_unshift( $links_array, '<a href="#">Settings</a>' );
 	return $links_array;
+}
+
+if(get_option('wp_plugin_template-litchi_setting_enable_wx_payment')) {
+
+add_action( 'init', 'wechat_wc_payment_gateway_init' );
+
+if(!function_exists('wechat_wc_payment_gateway_init')){
+    function wechat_wc_payment_gateway_init() {
+        if( !class_exists('WC_Payment_Gateway') )  return;
+        require_once plugin_dir_path( __FILE__ ) .'class-wechat-payment-gateway.php';
+        $api = new Litchi_WeChat_Payment_Gateway();
+
+        $api->check_wechatpay_response();
+
+        add_filter('woocommerce_payment_gateways',array($api,'woocommerce_wechatpay_add_gateway' ),10,1);
+    }
+}
 }
 
 /**
