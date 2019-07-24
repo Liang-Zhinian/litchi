@@ -81,6 +81,7 @@ class Litchi {
 		} else {
 			$this->version = '1.0.0';
 		}
+		
 		if ( defined( 'PLUGIN_NAME' ) ) {
 			$this->plugin_name = PLUGIN_NAME;
 		} else {
@@ -201,7 +202,7 @@ class Litchi {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
 		
-		// $this->loader->add_filter( 'plugin_action_links_litchi', $plugin_admin, 'plugin_action_links' );
+		$this->loader->add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), $plugin_admin, 'plugin_action_links' );
 
 	}
 

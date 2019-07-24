@@ -52,52 +52,55 @@ class Litchi_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 		
-		$inc_dir = dirname( dirname( __FILE__ ) ) . '/includes/';
+$inc_dir = dirname( dirname( __FILE__ ) ) . '/includes/';
 		require_once $inc_dir. 'log.php';
 		Logger::Init( Logger::DefaultLogFileHandler(), 15);
 		
 		//Logger::DEBUG(" Litchi_Admin -> __construct: " . sprintf("%s/settings.php", dirname(__FILE__)));
 		
-		// Initialize Settings
-		require_once(sprintf("%s/settings.php", dirname(__FILE__)));
-		$WP_Plugin_Template_Settings = new WP_Plugin_Template_Settings();
+			// Initialize Settings
+			require_once(sprintf("%s/settings.php", dirname(__FILE__)));
+			$WP_Plugin_Template_Settings = new WP_Plugin_Template_Settings();
 /*
 			// Register custom post types
 			require_once(sprintf("%s/post-types/post_type_template.php", dirname(__FILE__)));
 			$Post_Type_Template = new Post_Type_Template();
 */
 			
+//add_action( 'woocommerce_loaded', array( $this, 'init_hooks' ) );
+//add_filter( 'plugin_action_links_litchi', array( $this, 'plugin_action_links' ) );
 	}
 
 	public function init_hooks() {
 		//Logger::DEBUG(" Litchi_Admin -> init_hooks: " . plugin_basename(__FILE__));
-		add_filter( 'plugin_action_links_litchi/litchi.php', array( $this, 'plugin_action_links' ) );	
-	}
+			add_filter( 'plugin_action_links_litchi/litchi.php', array( $this, 'plugin_action_links' ) );
+		
+		}
 
 	// Add the settings link to the plugins page
 	public function plugin_action_links($links)
-	{
+		{
 		/*
 			$settings_link = '<a href="options-general.php?page=litchi">Settings</a>';
 			array_unshift($links, $settings_link);
 			return $links;
 			*/
 		
-		// Build and escape the URL.
-		$url = esc_url( add_query_arg(
-			'page',
-			'litchi-settings',
-			get_admin_url() . 'admin.php'
-		) );
-		// Create the link.
-		$settings_link = "<a href='$url'>" . __( 'Settings' ) . '</a>';
-		// Adds the link to the end of the array.
-		array_push(
-			$links,
-			$settings_link
-		);
-		return $links;
-	}
+	// Build and escape the URL.
+	$url = esc_url( add_query_arg(
+		'page',
+		'litchi-settings',
+		get_admin_url() . 'admin.php'
+	) );
+	// Create the link.
+	$settings_link = "<a href='$url'>" . __( 'Settings' ) . '</a>';
+	// Adds the link to the end of the array.
+	array_push(
+		$links,
+		$settings_link
+	);
+	return $links;
+		}
 
 	/**
 	 * Register the stylesheets for the admin area.

@@ -216,7 +216,7 @@ function update_customerShippingListMeta($value,$data,$field_name) {
 ////////////////////////////// shopping cart /////////////////////////////////////////////
 
 /* add shopping cart attribute to customer response */
-add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response', 10, 3 );
+add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response' );
 /**
  * Add extra fields in customers response.
  *
@@ -225,12 +225,12 @@ add_filter( 'woocommerce_rest_prepare_customer',  'prepare_customers_response', 
  *
  * @return WP_REST_Response
  */
-function prepare_customers_response( $response, $user, $request ) {
+function prepare_customers_response( $response/*, $user, $request*/ ) {
     global $WCFM, $wpdb;
     $data = $response->get_data();
 
     $cart = get_user_meta( $data[ 'id' ], '_woocommerce_persistent_cart_' . get_current_blog_id(), true );
-    
+    /*
     $cart = $cart['cart'];
 
         
@@ -283,19 +283,13 @@ function prepare_customers_response( $response, $user, $request ) {
         );
         // $cart[$field] = $cart_item;
     }
-
-    $response->data['cart']       =  $packages_reset;
-    $response -> data['display_name'] = $user->display_name;
+*/
+    $response->data['cart']       =  $cart; //$packages_reset;
 
     return $response;
-
 }
 /* end add shopping cart attribute to customer response */
 
-
-/**
- * add User Registration via REST API to WordPress Website
- */
 add_action('rest_api_init', 'wp_rest_user_endpoints');
 /**
  * Register a new user

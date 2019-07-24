@@ -341,6 +341,7 @@ function add_additional_order_statuses( $order_statuses ) {
 }
 add_filter( 'wc_order_statuses', 'add_additional_order_statuses' );
 
+
 function sv_add_my_account_order_actions( $actions, $order ) {
 
     $actions['help'] = array(

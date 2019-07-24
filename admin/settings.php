@@ -9,13 +9,13 @@ if(!class_exists('WP_Plugin_Template_Settings'))
 		public function __construct()
 		{
 			// register actions
-            add_action('admin_init', array(&$this, 'admin_init'));
-            add_action('admin_menu', array(&$this, 'add_menu'));
-            
-            $this -> enable_wx_pay = $this.get_option('litchi_setting_enable_wx_payment');
-        } // END public function __construct
-        
-        public function get_enable_wx_pay(){
+			add_action('admin_init', array(&$this, 'admin_init'));
+			add_action('admin_menu', array(&$this, 'add_menu'));
+			
+			$this->enable_wx_pay = get_option('litchi_setting_enable_wx_payment');
+		} // END public function __construct
+		
+        public function get_enable_wx_pay() {
             return $this -> enable_wx_pay;
         }
 		
@@ -28,9 +28,8 @@ if(!class_exists('WP_Plugin_Template_Settings'))
         	register_setting('wp_plugin_template-group', 'setting_a');
             register_setting('wp_plugin_template-group', 'setting_b');
             
-            register_setting('wp_plugin_template-group', 'litchi_setting_add_additional_order_status');
-            
-        	register_setting('wp_plugin_template-group', 'litchi_setting_enable_wx_payment');
+			register_setting('wp_plugin_template-group', 'litchi_setting_add_additional_order_status', array(&$this, 'my_settings_sanitize'));
+			register_setting('wp_plugin_template-group', 'litchi_setting_enable_wx_payment', array(&$this, 'my_settings_sanitize'));
 
         	// add your settings section
         	add_settings_section(
@@ -85,6 +84,12 @@ if(!class_exists('WP_Plugin_Template_Settings'))
             );
             // Possibly do additional admin_init tasks
         } // END public static function activate
+		
+ 
+		/* Sanitize Callback Function */
+		public function my_settings_sanitize( $input ){
+			return isset( $input ) ? true : false;
+		}
         
         public function settings_section_wp_plugin_template()
         {

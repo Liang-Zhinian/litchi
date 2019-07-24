@@ -30,9 +30,9 @@ class Litchi_API_Manager {
             $inc_dir . 'api/class-wechat-controller.php'                 => 'Litchi_REST_WeChat_Controller',
             $inc_dir . 'api/class-wcfmmarketplace-reports-controller.php'                 => 'Litchi_REST_Wcfmmp_Reports_Controller',
             $inc_dir . 'api/class-jwt-controller.php'                 => 'Litchi_REST_JWT_Controller',
-            $inc_dir . 'api/class-media-controller.php'                 => 'Litchi_REST_Media_Controller',
-            $inc_dir . 'api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',
-            
+            $inc_dir . 'api/class-media-controller.php'                 => 'Litchi_REST_Media_Controller',			
+            $inc_dir . 'api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',	
+            $inc_dir . 'api/class-refund-controller.php'                 => 'Litchi_REST_Refund_Controller',
         ) );
 
         // Init REST API routes.
