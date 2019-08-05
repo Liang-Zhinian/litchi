@@ -30,6 +30,9 @@ class Litchi_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+		require_once $inc_dir . 'class-social-db-init.php';
+		$social_db = new social_db_init();
+		$social_db -> init();
 
 	}
 

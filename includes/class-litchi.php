@@ -152,6 +152,8 @@ class Litchi {
 		require_once $inc_dir . 'class-api-manager.php';
 		
 		require_once $inc_dir . 'class-wechat.php';
+		
+		require_once $inc_dir . 'class-social-db-init.php';
 
 		$this -> init_classes() ;
 
@@ -167,7 +169,9 @@ class Litchi {
 	private function init_classes() {
 		//$this->container['vendor']        = new Litchi_Vendor_Manager();
 		$this->container['api']           = new Litchi_API_Manager();
-
+		
+		$social_db = new social_db_init();
+		$social_db -> init();
 	}
 
 	/**

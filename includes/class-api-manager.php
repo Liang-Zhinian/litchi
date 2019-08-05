@@ -25,6 +25,7 @@ class Litchi_API_Manager {
         // require_once LITCHI_DIR . '/includes/api/admin/class-admin-controller.php';
 
         $this->class_map = apply_filters( 'litchi_rest_api_class_map', array(
+            $inc_dir . 'api/class-litchi-rest-controller.php'                 => 'Litchi_REST_Controller',
             $inc_dir . 'api/class-cart-controller.php'                 => 'Litchi_REST_Cart_Controller',
             $inc_dir . 'api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
             $inc_dir . 'api/class-wechat-controller.php'                 => 'Litchi_REST_WeChat_Controller',

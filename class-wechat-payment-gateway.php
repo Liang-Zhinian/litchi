@@ -16,17 +16,29 @@ if (!defined('ABSPATH')) exit; // Exit if accessed directly
  */
 
  
-define('XH_WC_WeChat_DIR',rtrim(plugin_dir_path(__FILE__),'/'));
-define('XH_WC_WeChat_URL',rtrim(plugin_dir_url(__FILE__),'/'));
+define('Litchi_WC_WeChat_DIR',rtrim(plugin_dir_path(__FILE__),'/'));
+define('Litchi_WC_WeChat_URL',rtrim(plugin_dir_url(__FILE__),'/'));
 
 class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
     private $config;
-    
+	private $wechatpay_appID;
+	private $wechatpay_mchId;
+	private $wechatpay_key;
+	private $debug;
+	private $exchange_rate;
+    private $current_currency;
+    private $multi_currency_enabled;
+    private $supported_currencies;
+    private $lib_path;
+    private $charset;
 
     public function __construct(){
 		// support refunds
         array_push($this->supports,'refunds');
         
+        $this->current_currency = get_option('woocommerce_currency');
+        $this->multi_currency_enabled = in_array('woocommerce-multilingual/wpml-woocommerce.php', apply_filters('active_plugins', get_option('active_plugins'))) && get_option('icl_enable_multi_currency') == 'yes';
+        $this->supported_currencies = array('RMB', 'CNY');
         $this->lib_path = plugin_dir_path(__FILE__) . 'includes/vendor/WxPay';
         $this->charset = strtolower(get_bloginfo('charset'));
         if (!in_array($this->charset, array('gbk', 'utf-8'))) {
@@ -37,7 +49,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
         $this->id = 'wxpay';
         $this->icon = plugins_url('admin/images/wechatpay.png', __FILE__);
         $this->has_fields = false;
-        $this->method_title = __('微信支付 - Litchi', 'litchi');   //checkout option title
+        $this->method_title = __('微信支付', 'litchi');   //checkout option title
         $this->method_description='支持微信原生支付、微信退款等功能。';
 
 	    // $this->order_button_text = __('Proceed to WeChatPay', 'wechatpay');
@@ -74,17 +86,34 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		require_once $inc_dir. 'log.php';
 		Logger::Init( Logger::DefaultLogFileHandler(), 15);
 		
+		
+		add_action('admin_notices', array($this, 'requirement_checks'));
+		
         add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options')); // WC >= 2.0
         add_action('woocommerce_update_options_payment_gateways', array($this, 'process_admin_options'));
 
         
-        add_action( 'wp_ajax_XH_WECHAT_PAYMENT_GET_ORDER', array($this, "get_order_status" ) );
-        add_action( 'wp_ajax_nopriv_XH_WECHAT_PAYMENT_GET_ORDER', array($this, "get_order_status") );
+        add_action( 'wp_ajax_Litchi_WECHAT_PAYMENT_GET_ORDER', array($this, "get_order_status" ) );
+        add_action( 'wp_ajax_nopriv_Litchi_WECHAT_PAYMENT_GET_ORDER', array($this, "get_order_status") );
         add_action( 'woocommerce_receipt_'.$this->id, array($this, 'receipt_page'));
         
 
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
         add_action( 'wp_enqueue_scripts',array($this,'enqueue_script_onCheckout')  );
+	}
+	
+	
+    /**
+     * Check if requirements are met and display notices
+     *
+     * @access public
+     * @return void
+     */
+    function requirement_checks()
+    {
+        if (!in_array($this->current_currency, array('RMB', 'CNY')) && !$this->exchange_rate) {
+            echo '<div class="error"><p>' . sprintf(__('WeChatPay is enabled, but the store currency is not set to Chinese Yuan. Please <a href="%1s">set the %2s against the Chinese Yuan exchange rate</a>.', 'litchi'), admin_url('admin.php?page=wc-settings&tab=checkout&section=wc_wechatpay#woocommerce_wechatpay_exchange_rate'), $this->current_currency) . '</p></div>';
+        }
     }
 
     public function woocommerce_wechatpay_add_gateway( $methods ) {
@@ -109,8 +138,8 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		if ($this->id == $payment_method) {
 			if (is_checkout_pay_page () && ! isset ( $_GET ['pay_for_order'] )) {
 			    
-			    wp_enqueue_script ( 'XH_WECHAT_JS_QRCODE', XH_WC_WeChat_URL. '/admin/js/qrcode.js', array (), XH_WC_WeChat_VERSION );
-				wp_enqueue_script ( 'XH_WECHAT_JS_CHECKOUT', XH_WC_WeChat_URL. '/admin/js/checkout.js', array ('jquery','XH_WECHAT_JS_QRCODE' ), XH_WC_WeChat_VERSION );
+			    wp_enqueue_script ( 'Litchi_WECHAT_JS_QRCODE', Litchi_WC_WeChat_URL. '/admin/js/qrcode.js', array (), Litchi_WC_WeChat_VERSION );
+				wp_enqueue_script ( 'Litchi_WECHAT_JS_CHECKOUT', Litchi_WC_WeChat_URL. '/admin/js/checkout.js', array ('jquery','Litchi_WECHAT_JS_QRCODE' ), Litchi_WC_WeChat_VERSION );
 				
 			}
 		}
@@ -142,64 +171,72 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 
         $this->form_fields = array(
             'enabled' => array(
-                'title' => __('Enable/Disable', 'wechatpay'),
+                'title' => __('Enable/Disable', 'litchi'),
                 'type' => 'checkbox',
-                'label' => __('Enable WeChatPay Payment', 'wechatpay'),
+                'label' => __('Enable WeChat Payment', 'litchi'),
                 'default' => 'no'
             ),
             'title' => array(
-                'title' => __('Title', 'wechatpay'),
+                'title' => __('Title', 'litchi'),
                 'type' => 'text',
-                'description' => __('This controls the title which the user sees during checkout.', 'wechatpay'),
-                'default' => __('WeChatPay', 'wechatpay'),
+                'description' => __('This controls the title which the user sees during checkout.', 'litchi'),
+                'default' => __('WeChatPay', 'litchi'),
                 'desc_tip' => true,
             ),
             'description' => array(
-                'title' => __('Description', 'wechatpay'),
+                'title' => __('Description', 'litchi'),
                 'type' => 'textarea',
-                'description' => __('This controls the description which the user sees during checkout.', 'wechatpay'),
-                'default' => __("Pay via WeChatPay, if you don't have an WeChatPay account, you can also pay with your debit card or credit card", 'wechatpay'),
+                'description' => __('This controls the description which the user sees during checkout.', 'litchi'),
+                'default' => __("Pay via WeChatPay, if you don't have an WeChatPay account, you can also pay with your debit card or credit card", 'litchi'),
                 'desc_tip' => true,
             ),
             'wechatpay_appID' => array(
-                'title' => __('Application ID', 'wechatpay'),
+                'title' => __('Application ID', 'litchi'),
                 'type' => 'text',
-                'description' => __('Please enter the Application ID,If you don\'t have one, <a href="https://pay.weixin.qq.com" target="_blank">click here</a> to get.', 'wechatpay'),
+                'description' => __('Please enter the Application ID,If you don\'t have one, <a href="https://pay.weixin.qq.com" target="_blank">click here</a> to get.', 'litchi'),
                 'css' => 'width:400px'
             ),
             'wechatpay_mchId' => array(
-                'title' => __('Merchant ID', 'wechatpay'),
+                'title' => __('Merchant ID', 'litchi'),
                 'type' => 'text',
-                'description' => __('Please enter the Merchant ID,If you don\'t have one, <a href="https://pay.weixin.qq.com" target="_blank">click here</a> to get.', 'wechatpay'),
+                'description' => __('Please enter the Merchant ID,If you don\'t have one, <a href="https://pay.weixin.qq.com" target="_blank">click here</a> to get.', 'litchi'),
                 'css' => 'width:400px'
             ),
             'wechatpay_key' => array(
-                'title' => __('WeChatPay Key', 'wechatpay'),
+                'title' => __('WeChatPay Key', 'litchi'),
                 'type' => 'text',
-                'description' => __('Please enter your WeChatPay Key; this is needed in order to take payment.', 'wechatpay'),
-                'css' => 'width:200px',
+                'description' => __('Please enter your WeChatPay Key; this is needed in order to take payment.', 'litchi'),
+                'css' => 'width:400px',
                 'desc_tip' => true,
             ),
+	        'exchange_rate'=> array (
+	            'title' => __ ( 'Exchange Rate', 'litchi' ),
+	            'type' => 'text',
+	            'default'=>1,
+	            'description' =>  __ ( "Please set current currency against Chinese Yuan exchange rate, eg if your currency is US Dollar, then you should enter 6.19", 'wechatpay' ),
+	            'css' => 'width:400px;',
+	            'desc_tip' => true
+	        )
             /*'order_prefix' => array(
-                'title' => __('Order No. Prefix', 'wechatpay'),
+                'title' => __('Order No. Prefix', 'litchi'),
                 'type' => 'text',
-                'description' => __('eg.WC-. If you <strong>use your WeChatPay account for multiple stores</strong>, Please enter this prefix and make sure it is unique as WeChatPay will not allow orders with the same merchant order number.', 'wechatpay'),
+                'description' => __('eg.WC-. If you <strong>use your WeChatPay account for multiple stores</strong>, Please enter this prefix and make sure it is unique as WeChatPay will not allow orders with the same merchant order number.', 'litchi'),
                 'default' => 'WC-'
         ),*//*
             'WX_EnableProxy' => array(
-                'title' => __('Enable Proxy', 'wechatpay'),
+                'title' => __('Enable Proxy', 'litchi'),
                 'type' => 'checkbox',
                 'id' => 'Woo_WX_EnableProxy',
-                'label' => __('Enable Proxy', 'wechatpay'),
+                'label' => __('Enable Proxy', 'litchi'),
                 'default' => 'no',
-                'description' => __('If you are behind firewall or behind company network, you can  enable proxy to make the plugin works.', 'wechatpay')
+                'description' => __('If you are behind firewall or behind company network, you can  enable proxy to make the plugin works.', 'litchi')
             ),
             'WX_ProxyHost' => array(
-                'title' => __('Proxy Host', 'wechatpay'),
+                'title' => __('Proxy Host', 'litchi'),
                 'type' => 'text',
                 'id' => 'Woo_WX_ProxyHost',
                 'default' => '',
-                'desc_tip' => __('Please set proxy host.', 'wechatpay')
+                'desc_tip' => __('Please set proxy host.', 'litchi')
             ),
             'WX_ProxyPort' => array(
                 'title' => __('Proxy Port', 'wechatpay'),
@@ -219,16 +256,16 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
         /*        if (function_exists('wc_get_log_file_path')) {
                     $this->form_fields['WX_debug']['description'] = sprintf(__('Log WeChatPay events, such as trade status, inside <code>%s</code>', 'wechatpay'), plugin_dir_path(__FILE__) . 'logs/');
                 }*/
-        // if (!in_array($this->current_currency, array('RMB', 'CNY'))) {
+        if (!in_array($this->current_currency, array('RMB', 'CNY', 'CNY (¥)'))) {
 
-        //     $this->form_fields['exchange_rate'] = array(
-        //         'title' => __('Exchange Rate', 'wechatpay'),
-        //         'type' => 'text',
-        //         'description' => sprintf(__("Please set the %s against Chinese Yuan exchange rate, eg if your currency is US Dollar, then you should enter 6.19", 'wechatpay'), $this->current_currency),
-        //         'css' => 'width:80px;',
-        //         'desc_tip' => true,
-        //     );
-        // }
+            $this->form_fields['exchange_rate'] = array(
+                'title' => __('Exchange Rate', 'litchi'),
+                'type' => 'text',
+                'description' => sprintf(__("Please set the %s against Chinese Yuan exchange rate, eg if your currency is US Dollar, then you should enter 6.19", 'litchi'), $this->current_currency),
+                'css' => 'width:80px;',
+                'desc_tip' => true,
+            );
+        }
 
     }
     
@@ -256,7 +293,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		    }    
 		}
 		
-		return apply_filters('xh_wechat_wc_get_order_title', mb_strimwidth ( $title, 0,32, '...','utf-8'));
+		return apply_filters('litchi_wechat_wc_get_order_title', mb_strimwidth ( $title, 0,32, '...','utf-8'));
 	}
 	
 	public function get_order_status() {
@@ -299,7 +336,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		}
 		// 如果返回成功则验证签名
 		try {
-		    $result = WechatPaymentResults::Init ( $xml );
+		    $result = WxPayResults::Init ( $xml, $this->config );
 		    if (!$result||! isset($result['transaction_id'])) {
 		        return;
 		    }
@@ -307,9 +344,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		    $transaction_id=$result ["transaction_id"];
 		    $order_id = $result['attach'];
 		    
-		    $input = new WechatPaymentOrderQuery ();
+		    $input = new WxPayOrderQuery ();
 		    $input->SetTransaction_id ( $transaction_id );
-		    $query_result = WechatPaymentApi::orderQuery ( $input, $this->config );
+		    $query_result = WxPayApi::orderQuery ( $input, $this->config );
 		    if ($query_result['result_code'] == 'FAIL' || $query_result['return_code'] == 'FAIL') {
                 throw new Exception(sprintf("return_msg:%s ;err_code_des:%s "), $query_result['return_msg'], $query_result['err_code_des']);
             }
@@ -323,13 +360,13 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		          $order->payment_complete ($transaction_id);
 		    }
 		    
-		    $reply = new WechatPaymentNotifyReply ();
+		    $reply = new WxPayNotifyReply ();
 		    $reply->SetReturn_code ( "SUCCESS" );
 		    $reply->SetReturn_msg ( "OK" );
 		    
 		    WxpayApi::replyNotify ( $reply->ToXml () );
 		    exit;
-		} catch ( WechatPaymentException $e ) {
+		} catch ( WxPayException $e ) {
 		    return;
 		}
 	}
@@ -363,14 +400,14 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$amount = ( int ) ($amount * 100);
         
 		if($amount<=0||$amount>$total){
-			return new WP_Error( 'invalid_order',__('Invalid refused amount!' ,XH_WECHAT) );
+			return new WP_Error( 'invalid_order',__('Invalid refused amount!' ,'litchi') );
 		}
 	
 		$transaction_id = $trade_no;
 		$total_fee = $total;
 		$refund_fee = $amount;
 	
-		$input = new WechatPaymentRefund ();
+		$input = new WxPayRefund ();
 		$input->SetTransaction_id ( $transaction_id );
 		$input->SetTotal_fee ( $total_fee );
 		$input->SetRefund_fee ( $refund_fee );
@@ -379,9 +416,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$input->SetOp_user_id ( $this->config->getMCHID());
 	
 		try {
-			$result = WechatPaymentApi::refund ( $input,60 ,$this->config);
+			$result = WxPayApi::refund ( $input,60 ,$this->config);
 			if ($result ['result_code'] == 'FAIL' || $result ['return_code'] == 'FAIL') {
-				Log::DEBUG ( " XHWechatPaymentApi::orderQuery:" . json_encode ( $result ) );
+				Log::DEBUG ( " WxPayApi::orderQuery:" . json_encode ( $result ) );
 				throw new Exception ("return_msg:". $result ['return_msg'].';err_code_des:'. $result ['err_code_des'] );
 			}
 	
@@ -392,24 +429,21 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		return true;
 	}
 
-	/**
-	 * 
-	 * @param WC_Order $order
-	 */
+	
 	function receipt_page($order_id) {
 	    $order = new WC_Order($order_id);
 	    if(!$order||$order->is_paid()){
 	       return;
 	    }
 	    
-		$input = new WechatPaymentUnifiedOrder ();
+		$input = new WxPayUnifiedOrder ();
 		$input->SetBody ($this->get_order_title($order) );
 	
 		$input->SetAttach ( $order_id );
 		$input->SetOut_trade_no ( md5(date ( "YmdHis" ).$order_id ));    
 		$total = $order->get_total ();
         
-		$exchange_rate = floatval($this->get_option('exchange_rate'));
+		$exchange_rate = floatval($this->exchange_rate);
 		if($exchange_rate<=0){
 		    $exchange_rate=1;
 		}
@@ -428,7 +462,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$input->SetTrade_type ( "NATIVE" );
 		$input->SetProduct_id ($order_id );
 		try {
-		    $result = WechatPaymentApi::unifiedOrder ( $input, 60, $this->config );
+		    $result = WxPayApi::unifiedOrder ( $input, 60, $this->config );
 		} catch (Exception $e) {
 		    echo $e->getMessage();
 		    return;
@@ -444,7 +478,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		
 		$url =isset($result['code_url'])? $result ["code_url"]:'';
 		
-		echo  '<input type="hidden" id="xh-wechat-payment-pay-url" value="'.$url.'"/>';
+		echo  '<input type="hidden" id="litchi-wechat-payment-pay-url" value="'.$url.'"/>';
 		
 		?>
 		<style type="text/css">
@@ -472,9 +506,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
                 <h3>
         		   <font>支付方式已选择微信支付</font>
         		   <strong>
-        		      <img id="img1" src="<?php print XH_WC_WeChat_URL?>/admin/images/weixin.png">
+        		      <img id="img1" src="<?php print Litchi_WC_WeChat_URL?>/admin/images/weixin.png">
         			  <span>微信支付</span>
-        			  <img id="img2" src="<?php print XH_WC_WeChat_URL?>/admin/images/ep_new_sprites1.png">
+        			  <img id="img2" src="<?php print Litchi_WC_WeChat_URL?>/admin/images/ep_new_sprites1.png">
         		   </strong>
         		</h3>
         	    <h4>通过微信首页右上角扫一扫，或者在“发现-扫一扫”扫描二维码支付。本页面将在支付完成后自动刷新。</h4>
@@ -482,14 +516,14 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
         	 </div>
         		
              <div class="p-w-left">		  
-        		<div  id="xh-wechat-payment-pay-img" style="width:200px;height:200px;padding:10px;" data-oid="<?php echo $order_id;?>"></div>
+        		<div  id="litchi-wechat-payment-pay-img" style="width:200px;height:200px;padding:10px;" data-oid="<?php echo $order_id;?>"></div>
         		<p>使用微信扫描二维码进行支付</p>
         		
              </div>
         
         	 <div class="p-w-right">
         
-        	    <img src="<?php print XH_WC_WeChat_URL?>/images/ep_sys_wx_tip.jpg">
+        	    <img src="<?php print Litchi_WC_WeChat_URL?>/admin/images/ep_sys_wx_tip.jpg">
         	 </div>
         
         </div>

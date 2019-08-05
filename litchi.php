@@ -37,66 +37,67 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'LITCHI_VERSION', '1.0.0' );
 define( 'PLUGIN_NAME', 'litchi' );
+define( 'PLUGIN_FILE', __FILE__ );
 
 
-		//add_action('plugins_loaded', 'my_load_plugin_textdomain');
+//add_action('plugins_loaded', 'my_load_plugin_textdomain');
 
-	
-	
-	function my_load_plugin_textdomain() {
-		
-		$inc_dir = plugin_dir_path( __FILE__ ) . 'includes/';
-		require_once $inc_dir. 'log.php';
-		Logger::Init( Logger::DefaultLogFileHandler(), 15);
-		
-		//Logger::DEBUG(" Litchi -> load_plugin_textdomain: " . dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/0');
-		//Logger::DEBUG(" Litchi -> load_plugin_textdomain: " . dirname( plugin_basename(__FILE__) ) . '/languages/1');
 
-		load_plugin_textdomain(
-			'litchi',
-			false,
-			dirname( plugin_basename(__FILE__) ) . '/languages/'
-		);
 
-	}
+function my_load_plugin_textdomain() {
+
+	$inc_dir = plugin_dir_path( __FILE__ ) . 'includes/';
+	require_once $inc_dir. 'log.php';
+	Logger::Init( Logger::DefaultLogFileHandler(), 15);
+
+	//Logger::DEBUG(" Litchi -> load_plugin_textdomain: " . dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/0');
+	//Logger::DEBUG(" Litchi -> load_plugin_textdomain: " . dirname( plugin_basename(__FILE__) ) . '/languages/1');
+
+	load_plugin_textdomain(
+		'litchi',
+		false,
+		dirname( plugin_basename(__FILE__) ) . '/languages/'
+	);
+
+}
 
 //add_action( 'woocommerce_loaded', 'init_hooks' );
 
-	function init_hooks() {
-		//require_once plugin_dir_path( __FILE__ ) .'admin/class-litchi-admin.php';
-		$litchi_admin = new Litchi_Admin(PLUGIN_NAME, LITCHI_VERSION);
-		Logger::DEBUG(" Litchi -> init_hooks: " . 'plugin_action_links_' . plugin_basename(__FILE__));
-			add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array($litchi_admin, 'plugin_action_links') );
-		//add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'plugin_action_links' );
-		
-		}
+function init_hooks() {
+	//require_once plugin_dir_path( __FILE__ ) .'admin/class-litchi-admin.php';
+	$litchi_admin = new Litchi_Admin(PLUGIN_NAME, LITCHI_VERSION);
+	Logger::DEBUG(" Litchi -> init_hooks: " . 'plugin_action_links_' . plugin_basename(__FILE__));
+	add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), array($litchi_admin, 'plugin_action_links') );
+	//add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'plugin_action_links' );
 
-	// Add the settings link to the plugins page
-	function plugin_action_links( $links_array ){
+}
+
+// Add the settings link to the plugins page
+function plugin_action_links( $links_array ){
 	array_unshift( $links_array, '<a href="#">Settings</a>' );
 	return $links_array;
 }
 
 $inc_dir = plugin_dir_path( __FILE__ ) . 'includes/';
-		require_once $inc_dir. 'log.php';
-		Logger::Init( Logger::DefaultLogFileHandler(), 15);
+require_once $inc_dir. 'log.php';
+Logger::Init( Logger::DefaultLogFileHandler(), 15);
 $enable_wx_pay = get_option('litchi_setting_enable_wx_payment');
 
 if($enable_wx_pay) {
 
-add_action( 'init', 'wechat_wc_payment_gateway_init' );
+	add_action( 'init', 'wechat_wc_payment_gateway_init' );
 
-if(!function_exists('wechat_wc_payment_gateway_init')){
-    function wechat_wc_payment_gateway_init() {
-        if( !class_exists('WC_Payment_Gateway') )  return;
-        require_once plugin_dir_path( __FILE__ ) .'class-wechat-payment-gateway.php';
-        $api = new Litchi_WeChat_Payment_Gateway();
+	if(!function_exists('wechat_wc_payment_gateway_init')){
+		function wechat_wc_payment_gateway_init() {
+			if( !class_exists('WC_Payment_Gateway') )  return;
+			require_once plugin_dir_path( __FILE__ ) .'class-wechat-payment-gateway.php';
+			$api = new Litchi_WeChat_Payment_Gateway();
 
-        $api->check_wechatpay_response();
+			$api->check_wechatpay_response();
 
-        add_filter('woocommerce_payment_gateways',array($api,'woocommerce_wechatpay_add_gateway' ),10,1);
-    }
-}
+			add_filter('woocommerce_payment_gateways',array($api,'woocommerce_wechatpay_add_gateway' ),10,1);
+		}
+	}
 }
 
 /**

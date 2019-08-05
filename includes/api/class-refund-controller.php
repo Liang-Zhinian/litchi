@@ -95,12 +95,12 @@ class Litchi_REST_Refund_Controller extends WP_REST_Controller {
 		
 		// $status_filter = 'requested';
 		$status_filter = '';
-    if( isset($params['status_type']) ) {
-    	$status_filter = sanitize_text_field( $params['status_type'] );
-    }
-    if( $status_filter ) {
-    	$status_filter = " AND commission.refund_status = '" . $status_filter . "'";
-    }
+		if( isset($params['status_type']) ) {
+			$status_filter = sanitize_text_field( $params['status_type'] );
+		}
+		if( $status_filter ) {
+			$status_filter = " AND commission.refund_status = '" . $status_filter . "'";
+		}
 															
 		$requester_filter = " AND commission.`requested_by` = {$current_user_id}";
 
@@ -144,43 +144,43 @@ class Litchi_REST_Refund_Controller extends WP_REST_Controller {
 		$body = $request->get_json_params();
 
 		$order_id = $body['order_id'];
-		$product_id = $body['product_id'];
+		$refund_item_id = $body['refund_item_id'];
 		$refund_reason = $body['refund_reason'];
 		$refund_request = $body['refund_request'];
 		$refunded_amount = $body['refunded_amount'];
 
-		$response = $this -> processing($order_id, $product_id, $refunded_amount, $refund_request, $refund_reason);
+		$response = $this -> processing($order_id, $refund_item_id, $refunded_amount, $refund_request, $refund_reason);
 
 		return $response;
 	}
 
-    public function processing($order_id, $product_id, $refunded_amount, $refund_request, $refund_reason) {
+    public function processing($order_id, $refund_item_id, $refunded_amount, $refund_request, $refund_reason) {
 		global $WCFM, $WCFMmp, $wpdb;
 			  
-	  $wcfm_refund_messages = get_wcfm_refund_requests_messages();
-	  $has_error = false;
+		$wcfm_refund_messages = get_wcfm_refund_requests_messages();
+		$has_error = false;
+			
 		
-	  
-	  if(isset($refund_reason) && !empty($refund_reason)) {
+		if(isset($refund_reason) && !empty($refund_reason)) {
 	  	
-	  	$refund_reason    = wcfm_stripe_newline( $refund_reason );
-	  	$refund_reason    = esc_sql( $refund_reason );
-	  	$order_id         = absint( $order_id );
-	  	$commission_id    = 0;
-	  	$refund_item_id   = absint( $product_id );
-	  	$refund_request   = $refund_request;
-	  	$refunded_amount  = $refunded_amount;
-	  	$refund_status    = 'pending';
-	  	
-	  	$product_id       = 0;
-	  	$vendor_id        = 0;
-	  	$item_total       = 0;
-	  	$old_refunds      = 0;
-	  	
-	  	$sql = 'SELECT ID, product_id, vendor_id, item_total, refunded_amount FROM ' . $wpdb->prefix . 'wcfm_marketplace_orders AS commission';
+			$refund_reason    = wcfm_stripe_newline( $refund_reason );
+			$refund_reason    = esc_sql( $refund_reason );
+			$order_id         = absint( $order_id );
+			$commission_id    = 0;
+			$refund_item_id   = absint( $refund_item_id );
+			$refund_request   = $refund_request;
+			$refunded_amount  = $refunded_amount;
+			$refund_status    = 'pending';
+			
+			$product_id       = 0;
+			$vendor_id        = 0;
+			$item_total       = 0;
+			$old_refunds      = 0;
+			
+			$sql = 'SELECT ID, product_id, vendor_id, item_total, refunded_amount FROM ' . $wpdb->prefix . 'wcfm_marketplace_orders AS commission';
 			$sql .= ' WHERE 1=1';
 			$sql .= " AND `order_id` = " . $order_id;
-			$sql .= " AND `product_id`  = " . $refund_item_id;
+			$sql .= " AND `item_id`  = " . $refund_item_id;
 			$commissions = $wpdb->get_results( $sql );
 			if( !empty( $commissions ) ) {
 				foreach( $commissions as $commission ) {
