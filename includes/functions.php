@@ -166,3 +166,18 @@ if( !function_exists( 'which_marketplace' ) ) {
 		return $is_marketplace;
 	}
 }
+
+/**
+ * Register a book post type, with REST API support
+ *
+ * Based on example at: https://codex.wordpress.org/Function_Reference/register_post_type
+ */
+add_action( 'init', 'my_book_cpt' );
+function my_book_cpt() {
+    $args = array(
+      'public'       => true,
+      'show_in_rest' => true,
+      'label'        => 'dokan_slider'
+    );
+    register_post_type( 'dokan_slider', $args );
+}

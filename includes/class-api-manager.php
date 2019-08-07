@@ -25,7 +25,6 @@ class Litchi_API_Manager {
         // require_once LITCHI_DIR . '/includes/api/admin/class-admin-controller.php';
 
         $this->class_map = apply_filters( 'litchi_rest_api_class_map', array(
-            $inc_dir . 'api/class-litchi-rest-controller.php'                 => 'Litchi_REST_Controller',
             $inc_dir . 'api/class-cart-controller.php'                 => 'Litchi_REST_Cart_Controller',
             $inc_dir . 'api/class-social-controller.php'                 => 'Litchi_REST_Social_Controller',
             $inc_dir . 'api/class-wechat-controller.php'                 => 'Litchi_REST_WeChat_Controller',
@@ -34,6 +33,7 @@ class Litchi_API_Manager {
             $inc_dir . 'api/class-media-controller.php'                 => 'Litchi_REST_Media_Controller',			
             $inc_dir . 'api/class-product-controller.php'                 => 'Litchi_REST_Product_Controller',	
             $inc_dir . 'api/class-refund-controller.php'                 => 'Litchi_REST_Refund_Controller',
+            $inc_dir . 'api/class-ads-controller.php'                 => 'Litchi_REST_Ads_Controller'
         ) );
 
         // Init REST API routes.

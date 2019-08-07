@@ -86,6 +86,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		require_once $inc_dir. 'log.php';
 		Logger::Init( Logger::DefaultLogFileHandler(), 15);
 		
+Logger::DEBUG(" Litchi -> Litchi_WeChat_Payment_Gateway constuct." );
 		
 		add_action('admin_notices', array($this, 'requirement_checks'));
 		
@@ -342,7 +343,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		    }
 		    
 		    $transaction_id=$result ["transaction_id"];
-		    $order_id = $result['attach'];
+		    $order_id = $result['out_trade_no'];
 		    
 		    $input = new WxPayOrderQuery ();
 		    $input->SetTransaction_id ( $transaction_id );
@@ -372,7 +373,8 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 	}
 
 	public function process_refund( $order_id, $amount = null, $reason = ''){		
-		Logger::DEBUG(" Litchi -> process_refund: " . $reason);
+		
+Logger::DEBUG(" Litchi -> process_refund: " . $reason);
 		$order = new WC_Order ($order_id );
 		if(!$order){
 			return new WP_Error( 'invalid_order','错误的订单' );

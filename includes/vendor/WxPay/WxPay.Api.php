@@ -299,10 +299,10 @@ class WxPayApi
 		} else {
 			$error = curl_error($ch);
 			curl_close($ch);
+
 			throw new WxPayException("curl出错, url:$url, 错误码:$error");
 		}
 	}
-	
 	
 	/**
 	 *

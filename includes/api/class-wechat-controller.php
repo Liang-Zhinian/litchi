@@ -247,7 +247,8 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
             $order = new WC_Order( $out_trade_no );
             if ($order) {
 
-                Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): ORDER STATUS " . $order->status);
+
+		Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): ORDER STATUS " . $order->status);
 
                 if ( 'pending' == $order->status ) {
                     $order -> set_payment_method( __("wxpay", 'litchi') );
@@ -259,9 +260,6 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                     Logger::DEBUG(" Litchi_REST_WeChat_Controller -> setOrderAsPaid(): ORDER PAID");
                 }
 
-                // Mark as on-hold (we're awaiting the cheque)
-                //$order -> payment_complete();
-            
                 //exit("<xml><return_code><![CDATA[SUCCESS]]></return_code><return_msg><![CDATA[OK]]></return_msg></xml>");
 
                 return $order;

@@ -2,7 +2,7 @@
 global $wpdb;
 class social_db_init {
 	
-	function init() {
+	public function init() {
 		
 		global $wpdb;
 		$charset_collate = $wpdb->get_charset_collate();		

@@ -37,7 +37,6 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'LITCHI_VERSION', '1.0.0' );
 define( 'PLUGIN_NAME', 'litchi' );
-define( 'PLUGIN_FILE', __FILE__ );
 
 
 //add_action('plugins_loaded', 'my_load_plugin_textdomain');
