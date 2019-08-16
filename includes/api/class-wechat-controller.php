@@ -185,7 +185,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
                 // 'total_fee'     => $need_info['price_total'] * 100,//价格，分
                 'total_fee'     => $params['total_fee'] * 100,
                 // 'attach'         => $params['attach'],
-                'notify_url'     => 'https://www.sureiot.com/wp-json/litchi/v1/wx/pay/notify', //异步通知页面url
+                'notify_url'	=> get_option('wechatpay_notify_url') //'https://www.what2book.com.cn/wp-json/litchi/v1/wx/pay/notify', //异步通知页面url
             );
                   
 

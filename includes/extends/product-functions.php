@@ -66,16 +66,15 @@ function add_meta_query( $args, $meta_query ) {
 
 
 add_filter( 'woocommerce_rest_prepare_product_object', 'prepeare_product_response', 11, 3 );
-add_filter( 'woocommerce_api_product_response', 'filter_woocommerce_api_product_response', 11, 4 );
+add_filter( 'woocommerce_api_product_response', 'filter_woocommerce_api_product_response', 10, 4 );
 
 /**
  * Legacy: Prepare object for product response
  *
  * @since 1.2.0
  */
-function filter_woocommerce_api_product_response( $product_data, $product, $fields, $this_server ) {     
-	$data = $response->get_data();
-	$author_id = get_post_field( 'post_author', $data['id'] );
+function filter_woocommerce_api_product_response( $product_data, $product, $fields, $this_server ) { 
+	$author_id = get_post_field( 'post_author', $product_data['id'] );
 	$which_marketplace = which_marketplace();
 
 	if ($which_marketplace == 'wcfmmarketplace') {
@@ -104,17 +103,41 @@ function filter_woocommerce_api_product_response( $product_data, $product, $fiel
 		);
 
 	} else if ($which_marketplace == 'dokan') {
-		$store_user               = dokan()->vendor->get( $author_id );
-		$store_logo = $store_user->get_avatar();
-		$store = array();
+		$store               = dokan()->vendor->get( $author_id );
+		$store_logo = $store->get_avatar();
+		$store = array(
+			'id'        => $store->get_id(),
+			'name'      => $store->get_name(),
+			'shop_name' => $store->get_shop_name(),
+			'url'       => $store->get_shop_url(),
+			'address'   => $store->get_address(),
+			'logo'      => $store_logo,
+			'social' => $store->get_social_profiles(),
+			'phone' => $store->get_phone(),
+			'email' => $store->get_email(),
+			'im' => get_im_profiles($store)
+		);
 
-		$store['logo'] = $store_logo;
-		foreach( $product_data['store'] as $key => $value ) {
-			$store[$key] = $value;
-		}
 		$product_data['store'] = $store;
 	}
 
+
+	$post_id = $product_data['id'];
+	$taq_review = array();
+	$taq_review_title = get_post_meta( $post_id, 'taq_review_title' );
+	if ($taq_review_title) {
+		$taq_review['taq_review_title'] =  $taq_review_title;
+	}
+	$taq_review_criteria = get_post_meta( $post_id, 'taq_review_criteria' );
+	if ($taq_review_criteria) {
+		$taq_review['taq_review_criteria'] =  $taq_review_criteria;
+	}
+	$taq_review_score = get_post_meta( $post_id, 'taq_review_score' );
+	if ($taq_review_score) {
+		$score = (int)$taq_review_score[0];
+		$taq_review['taq_review_score'] =  $score;
+	}
+	$product_data['taq_review'] =  $taq_review;
 
 	return $product_data;
 }
@@ -129,8 +152,8 @@ function filter_woocommerce_api_product_response( $product_data, $product, $fiel
 function prepeare_product_response( $response, $object, $request ) {
 	$data = $response->get_data();
 	$author_id = get_post_field( 'post_author', $data['id'] );
-    $which_marketplace = which_marketplace();
-    
+	$which_marketplace = which_marketplace();
+
 	if ($which_marketplace == 'wcfmmarketplace') {
 		global $WCFM, $WCFMmp;
 
@@ -146,7 +169,8 @@ function prepeare_product_response( $response, $object, $request ) {
 			'shop_name' => $store->get_shop_name(),
 			'url'       => $store->get_shop_url(),
 			'address'   => $store->get_address(),
-			'logo'      => $store_logo
+			'logo'      => $store_logo,
+			'social' => $store->get_social_profiles()
 		);
 
 	} else if ($which_marketplace == 'dokan') {
@@ -155,12 +179,70 @@ function prepeare_product_response( $response, $object, $request ) {
 		$store = array();
 
 		$store['logo'] = $store_logo;
+		$store['social'] = $store_user->get_social_profiles();
+		$store['phone'] = $store_user->get_phone();
+		$store['email'] = $store_user->get_email();
+		$store['im'] = get_im_profiles($store_user);
 		foreach( $data['store'] as $key => $value ) {
 			$store[$key] = $value;
 		}
 		$data['store'] = $store;
 	}
 
+	$post_id = $data['id'];
+	$taq_review = array();
+	$taq_review_title = get_post_meta( $post_id, 'taq_review_title' );
+	if ($taq_review_title) {
+		$taq_review['taq_review_title'] =  $taq_review_title;
+	}
+	$taq_review_criteria = get_post_meta( $post_id, 'taq_review_criteria' );
+	if ($taq_review_criteria) {
+		$taq_review['taq_review_criteria'] =  $taq_review_criteria;
+	}
+	$taq_review_score = get_post_meta( $post_id, 'taq_review_score' );
+	if ($taq_review_score) {
+		$score = (int)$taq_review_score[0];
+		$taq_review['taq_review_score'] =  $score;
+	}
+	$data['taq_review'] =  $taq_review;
+
+	$response->set_data( $data);
+
 	$response->set_data( $data);
 	return $response;
 }
+
+function get_im_profiles($store) {
+	return array(
+		'qq' => $store->get_info_part( 'qq' ) ?? '',
+	);
+}
+
+//Adding Alphabetical sorting option to shop and product settings pages
+function alphabetical_shop_ordering( $sort_args ) {
+	$orderby_value = isset( $_GET['orderby'] ) ? woocommerce_clean( $_GET['orderby'] ) : apply_filters( 'woocommerce_default_catalog_orderby', get_option( 'woocommerce_default_catalog_orderby' ) );
+	if ( 'taq_review_score' == $orderby_value ) {
+		$sort_args['orderby'] = 'meta_value_num';
+		// 		$sort_args['order'] = 'desc';
+		$sort_args['meta_key'] = 'taq_review_score';
+	}
+	return $sort_args;
+}
+add_filter( 'woocommerce_get_catalog_ordering_args', 'alphabetical_shop_ordering' );
+
+function custom_wc_catalog_orderby( $sortby ) {
+	$sortby['taq_review_score'] = 'Sort by Name: Alphabetical';
+	$sortby['taq_review_score'] = 'Sort by Name: Alphabetical';
+	return $sortby;
+}
+// add_filter( 'woocommerce_default_catalog_orderby_options', 'custom_wc_catalog_orderby' );
+// add_filter( 'woocommerce_catalog_orderby', 'custom_wc_catalog_orderby' );
+
+// add new orderby options to product rest api
+add_filter('rest_product_collection_params', 'rest_product_collection_params');
+function rest_product_collection_params($params){
+	$params['orderby']['enum'] = array_merge( $params['orderby']['enum'], array( 'taq_review_score' ) );
+
+	return $params;
+}
+

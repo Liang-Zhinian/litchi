@@ -37,6 +37,8 @@ if ( ! defined( 'WPINC' ) ) {
  */
 define( 'LITCHI_VERSION', '1.0.0' );
 define( 'PLUGIN_NAME', 'litchi' );
+define( 'LITCHI_DIR', dirname( __FILE__ ) );
+define( 'LITCHI_CERT_DIR', dirname( __FILE__ ) . '/cert' );
 
 
 //add_action('plugins_loaded', 'my_load_plugin_textdomain');

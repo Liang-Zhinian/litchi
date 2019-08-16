@@ -126,6 +126,7 @@ return self::$defaultLogFileHandler;
         // if($WxCfg['WX_debug']){
             if(($level & $this->level) == $level )
             {
+				$msg = print_r( $msg, true );
                 $msg = '['.date('Y-m-d H:i:s').']['.$this->getLevelStr($level).'] '.$msg."\n";
                 $this->handler->write($msg);
             }

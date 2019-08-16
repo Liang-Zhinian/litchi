@@ -7,6 +7,7 @@ require_once dirname( __FILE__ ) . '/extends/product-functions.php';
 require_once dirname( __FILE__ ) . '/extends/comment-functions.php';
 require_once dirname( __FILE__ ) . '/extends/cart-functions.php';
 require_once dirname( __FILE__ ) . '/extends/jwt-functions.php';
+require_once dirname( __FILE__ ) . '/extends/dokan-functions.php';
 
 
 // add_filter( 'woocommerce_rest_customer_schema', 'addresses_schema' );
