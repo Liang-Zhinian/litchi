@@ -8,14 +8,14 @@
  */
 class Litchi_Sms_Sender {
 
-	protected $app_key = '01785d4a4d9a4c3d56a2802eaeaaa52c';
+	protected $app_key = '0bc1532f3e6d5e3a498982c11a500186';
 
 	public function __construct()
 	{
 
 	}
 
-	public function sendMessage($mobile, $tpl_id = '179044', $tpl_value='#code#=1234&#company#=聚合数据'){
+	public function sendMessage($mobile, $tpl_id = '181061', $tpl_value='#code#=1234&#company#=聚合数据'){
 		$sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
 
 		$smsConf = array(
@@ -47,7 +47,7 @@ class Litchi_Sms_Sender {
 		}
 	}
 
-	public function sendVerCode($mobile, $tpl_id = '179045', $vercode = '1234') {
+	public function sendVerCode($mobile, $tpl_id = '181063', $vercode = '1234') {
 		$sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
 		// 		$sendUrl = 'http://v.juhe.cn/vercodesms/send.php'; //验证码短信接口的URL
 		$tpl_value='#code#=' . $vercode . '&#company#=聚合数据';

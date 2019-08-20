@@ -185,7 +185,7 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		require_once $inc_dir. 'class-sms-sender.php';   
 		$sms_sender = new Litchi_Sms_Sender();
 
-		$result = $sms_sender->sendVerCode($body['mobile'], '179045', $body['vercode']);
+		$result = $sms_sender->sendVerCode($body['mobile'], '181063', $body['vercode']);
 		
 
 		return new WP_REST_Response( $result, 200 );
