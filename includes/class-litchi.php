@@ -157,6 +157,10 @@ class Litchi {
 
 		require_once $inc_dir . 'class-information-db-init.php';
 
+		require_once $inc_dir . 'class-sms-db-init.php';
+
+		
+
 		$this -> init_classes() ;
 
 		$this->loader = new Litchi_Loader();
@@ -178,6 +182,10 @@ class Litchi {
 
 		$social_db = new information_db_init();
 		$social_db -> init();
+
+		$sms_db = new sms_db_init();
+		$sms_db -> init();
+		
 	}
 
 	/**
