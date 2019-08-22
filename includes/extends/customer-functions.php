@@ -371,3 +371,28 @@ function wc_rest_user_endpoint_handler($request = null) {
   }
   return new WP_REST_Response($response, 123);
 }
+
+
+
+/* Display additional shipping fields (email, phone) in USER area (i.e. Admin User/Customer display ) */
+/* Note:  $fields keys (i.e. field names) must be in format: shipping_ */
+add_filter( 'woocommerce_customer_meta_fields' , 'my_additional_customer_meta_fields' );
+function my_additional_customer_meta_fields( $fields ) {
+	$fields['shipping']['fields']['shipping_phone'] = array(
+		'label' => __( 'Phone', 'woocommerce' ),
+		'description' => '',
+	);
+	$fields['shipping']['fields']['shipping_email'] = array(
+		'label' => __( 'Email', 'woocommerce' ),
+		'description' => '',
+	);
+	$fields['contact'] = array(
+		'title'  => __( 'Customer contact information', 'woocommerce' ),
+		'fields' => array(
+			'Telephone' => array(
+				'label' => __( 'Phone', 'woocommerce' ),
+				'description' => '',
+			),
+		));
+	return $fields;
+}

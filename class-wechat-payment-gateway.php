@@ -67,7 +67,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$this->order_title_format = $this->get_option('order_title_format');
 		$this->exchange_rate = $this->get_option('exchange_rate');
 		$this->order_prefix = $this->get_option('order_prefix');
-		$this->notify_url = get_option('wechatpay_notify_url'); //WC()->api_request_url('WC_WeChatPay');
+		$this->notify_url = $this->get_option('wechatpay_notify_url'); //WC()->api_request_url('WC_WeChatPay');
 		$this->ipn = null;
 
 
@@ -322,6 +322,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		exit;
 	}
 
+	// 无论是网页付款还是App付款，付款完成后都统一调用此方法
 	public function check_wechatpay_response() {
 		if(defined('WP_USE_THEMES')&&!WP_USE_THEMES){
 			return;
@@ -370,7 +371,10 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 
 			$order = new WC_Order ( $order_id );
 			if($order->needs_payment()){
-				$order->payment_complete ($transaction_id);
+				$order->payment_complete ($transaction_id); // 订单状态变为“正在处理”
+				$order -> add_order_note( __('Wechat payment completed via wxpay gateway.', 'litchi') );
+				$order->update_status( 'paid' ); // 订单状态变为“已付款”
+				$order->update_status( 'awaiting-shipment' ); // 订单状态变为“等待装运”
 			}
 
 			$reply = new WxPayNotifyReply ();

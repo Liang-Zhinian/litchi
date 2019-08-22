@@ -150,6 +150,11 @@ function slug_register_order_fields() {
 	register_rest_field( 'shop_order', 'sub_orders', array(
 		'get_callback' => 'get_sub_orders',
 	));
+
+
+	// 	register_rest_field( 'shop_order', 'store_x', array(
+	// 		'get_callback' => 'get_store',
+	// 	), 30);
 }
 
 add_filter( 'woocommerce_rest_orders_prepare_object_query', 'my_woocommerce_rest_orders_prepare_object_query', 10, 2 );
@@ -247,9 +252,41 @@ function prepare_shop_orders_response( $response, $post, $request ) {
 	}
 	$response->data['line_items'] = $line_items_reset;
 
+	//try{
+	// 		$query_args = array(
+	// 			'parent' => $post->ID,
+	// 			'post_type' => 'shop_order'
+	// 		);
+	// 		$query  = new WP_Query();
+	// 		$result = $query->query( $query_args );
+
+	// 		$total_posts = $query->found_posts;
+
+	// 		$response->data['sub-orders'] = $result;
+	// 	}catch(Exception $e){
+	// 		return $e;
+	// 	}
 
 	return $response;
 
+}
+
+// function get_im_profiles($store) {
+// 	return array(
+// 		'qq' => $store->get_info_part( 'qq' ) ?? '',
+// 	);
+// }
+
+function get_store($data,$field_name,$request){
+	$which_marketplace = which_marketplace();
+	$im = array();
+	if ($which_marketplace == 'dokan'){
+		$store = dokan()->vendor->get( $data['id'] );
+		$im = get_im_profiles($store);
+	}
+	$store = $data['store'];
+	$store['im'] = $im;
+	return $store;
 }
 
 function get_sub_orders($data,$field_name,$request){
@@ -358,20 +395,6 @@ function my_additional_admin_shipping_fields( $fields ) {
 	);
 	$fields['phone'] = array(
 		'label' => __( 'Order Ship Phone', 'woocommerce' ),
-	);
-	return $fields;
-}
-/* Display additional shipping fields (email, phone) in USER area (i.e. Admin User/Customer display ) */
-/* Note:  $fields keys (i.e. field names) must be in format: shipping_ */
-add_filter( 'woocommerce_customer_meta_fields' , 'my_additional_customer_meta_fields' );
-function my_additional_customer_meta_fields( $fields ) {
-	$fields['shipping']['fields']['shipping_phone'] = array(
-		'label' => __( 'Telephone', 'woocommerce' ),
-		'description' => '',
-	);
-	$fields['shipping']['fields']['shipping_email'] = array(
-		'label' => __( 'Email', 'woocommerce' ),
-		'description' => '',
 	);
 	return $fields;
 }
@@ -574,54 +597,66 @@ function wc_renaming_order_status( $order_statuses ) {
 
 /////////////////////////////////////////////
 function when_order_status_pending($order_id) {
-	error_log("$order_id set to PENDING");
+	write_log("$order_id set to PENDING");
 }
 function when_order_status_failed($order_id) {
-	error_log("$order_id set to FAILED");
+	write_log("$order_id set to FAILED");
 }
 function when_order_status_hold($order_id) {
-	error_log("$order_id set to ON HOLD");
+	write_log("$order_id set to ON HOLD");
+
+	$order = new WC_Order( $order_id );
+	$order_data = $order->get_data();
+	$customer_id = $order_data['customer_id'];
+	if(!empty($customer_id)) {
+		$customer = new WC_Customer( $customer_id );
+		$customer_data = $customer->get_data();
+		write_log($customer_data);
+	}
+
+
+
+
+
 }
 function when_order_status_processing($order_id) {
-	error_log("$order_id set to PROCESSING");
+	write_log("$order_id set to PROCESSING");
 }
 function when_order_status_completed($order_id) {
-	error_log("$order_id set to COMPLETED");
-	
-	write_log('Order completed!');
+	write_log("$order_id set to COMPLETED");
 
-// 	$sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
+	// 	$sendUrl = 'http://v.juhe.cn/sms/send'; //短信接口的URL
 
-// 	$smsConf = array(
-// 		'key'   => '01785d4a4d9a4c3d56a2802eaeaaa52c', //您申请的APPKEY
-// 		'mobile'    => '13533550310', //接受短信的用户手机号码
-// 		'tpl_id'    => '179044', //您申请的短信模板ID，根据实际情况修改
-// 		'tpl_value' =>'#code#=1234&#company#=聚合数据' //您设置的模板变量，根据实际情况修改
-// 	);
+	// 	$smsConf = array(
+	// 		'key'   => '01785d4a4d9a4c3d56a2802eaeaaa52c', //您申请的APPKEY
+	// 		'mobile'    => '13533550310', //接受短信的用户手机号码
+	// 		'tpl_id'    => '179044', //您申请的短信模板ID，根据实际情况修改
+	// 		'tpl_value' =>'#code#=1234&#company#=聚合数据' //您设置的模板变量，根据实际情况修改
+	// 	);
 
-// 	$content = juhecurl($sendUrl,$smsConf,1); //请求发送短信
+	// 	$content = juhecurl($sendUrl,$smsConf,1); //请求发送短信
 
-// 	if($content){
-// 		$result = json_decode($content,true);
-// 		$error_code = $result['error_code'];
-// 		if($error_code == 0){
-// 			//状态为0，说明短信发送成功
-// 			echo "短信发送成功,短信ID：".$result['result']['sid'];
-// 		}else{
-// 			//状态非0，说明失败
-// 			$msg = $result['reason'];
-// 			echo "短信发送失败(".$error_code.")：".$msg;
-// 		}
-// 	}else{
-// 		//返回内容异常，以下可根据业务逻辑自行修改
-// 		echo "请求发送短信失败";
-// 	}
+	// 	if($content){
+	// 		$result = json_decode($content,true);
+	// 		$error_code = $result['error_code'];
+	// 		if($error_code == 0){
+	// 			//状态为0，说明短信发送成功
+	// 			echo "短信发送成功,短信ID：".$result['result']['sid'];
+	// 		}else{
+	// 			//状态非0，说明失败
+	// 			$msg = $result['reason'];
+	// 			echo "短信发送失败(".$error_code.")：".$msg;
+	// 		}
+	// 	}else{
+	// 		//返回内容异常，以下可根据业务逻辑自行修改
+	// 		echo "请求发送短信失败";
+	// 	}
 }
 function when_order_status_refunded($order_id) {
-	error_log("$order_id set to REFUNDED");
+	write_log("$order_id set to REFUNDED");
 }
 function when_order_status_cancelled($order_id) {
-	error_log("$order_id set to CANCELLED");
+	write_log("$order_id set to CANCELLED");
 }
 
 add_action( 'woocommerce_order_status_pending', 'when_order_status_pending', 10, 1);
