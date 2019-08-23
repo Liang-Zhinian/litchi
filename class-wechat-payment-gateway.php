@@ -67,7 +67,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$this->order_title_format = $this->get_option('order_title_format');
 		$this->exchange_rate = $this->get_option('exchange_rate');
 		$this->order_prefix = $this->get_option('order_prefix');
-		$this->notify_url = $this->get_option('wechatpay_notify_url'); //WC()->api_request_url('WC_WeChatPay');
+		$this->notify_url = WC()->api_request_url('WC_WeChatPay'); // get_option('wechatpay_notify_url'); //
 		$this->ipn = null;
 
 
@@ -106,6 +106,11 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 
 		add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
 		add_action( 'wp_enqueue_scripts',array($this,'enqueue_script_onCheckout')  );
+
+
+		// approve refund request automatically such as stripe connect
+		add_action( 'dokan_after_refund_request', [ $this, 'dokan_process_refund_request' ], 10, 2);
+		//       add_action( 'wp_ajax_nopriv_dokan_refund_request', array( $this, 'dokan_refund_request') );
 	}
 
 
@@ -388,6 +393,35 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		}
 	}
 
+	function update_refund_request_method( $refund_request_id, $method = 'false' ) {
+        global $wpdb;
+
+        $wpdb->query( $wpdb->prepare(
+            "UPDATE {$wpdb->prefix}dokan_refund
+            SET method = %s WHERE id = %d",
+            $method, $refund_request_id
+        ) );
+    }
+
+
+	public function dokan_process_refund_request( $refund_id, $data ) {
+		Logger::DEBUG(" Litchi -> dokan_process_refund_request: " . $refund_id);
+
+		if ( ! $data['order_id'] ) {
+			return wp_send_json( __( 'No refund data to be processed', 'dokan' ) );
+		}
+
+		$order_id         = $data['order_id'];
+		$vendor_id        = dokan_get_seller_id_by_order( $order_id );
+		
+		$order = new WC_Order ( $order_id );
+		$payment_method = method_exists($order, 'get_payment_method')?$order->get_payment_method():$order->payment_method;
+		if ($this->id == $payment_method) {
+			$this->update_refund_request_method(refund_id, 'true');
+			
+		}
+	}
+
 	public function process_refund( $order_id, $amount = null, $reason = ''){		
 
 		Logger::DEBUG(" Litchi -> process_refund: " . $reason);
@@ -401,7 +435,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 			return new WP_Error( 'invalid_order', '未找到微信支付交易号或订单未支付' );
 		}
 
-		$total = $order->get_total ();
+		$total = $order->get_total();
 		//$amount = $amount;
 		$preTotal = $total;
 		$preAmount = $amount;
@@ -418,7 +452,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$amount = ( int ) ($amount * 100);
 
 		if($amount<=0||$amount>$total){
-			return new WP_Error( 'invalid_order',__('Invalid refused amount!' ,'litchi') );
+			return new WP_Error( 'invalid_order',__('Invalid refunded amount!' ,'litchi') );
 		}
 
 		$transaction_id = $trade_no;
@@ -442,6 +476,19 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 				throw new Exception ("return_msg:". $result ['return_msg'].';app_id:' . $app_id . ';fee:'.$fee_summary.';err_code_des:'. $result ['err_code_des'] );
 			}
 
+
+			Logger::DEBUG( 'Refund Result: ' . wc_print_r( $result, true ) );
+
+			// 			switch ( strtolower( $result->ACK ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
+			// 				case 'success':
+			// 				case 'successwithwarning':
+			// 					$order->add_order_note(
+			// 						/* translators: 1: Refund amount, 2: Refund ID */
+			// 						sprintf( __( 'Refunded %1$s - Refund ID: %2$s', 'woocommerce' ), $result->GROSSREFUNDAMT, $result->REFUNDTRANSACTIONID ) // phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
+			// 					);
+			// 					return true;
+			// 			}
+
 		} catch ( Exception $e ) {
 			return new WP_Error( 'invalid_order',$e->getMessage ());
 		}
@@ -449,6 +496,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		return true;
 	}
 
+	function get_notify_url(){
+		return $this->get_option('wechatpay_notify_url');
+	}
 
 	function receipt_page($order_id) {
 		$order = new WC_Order($order_id);
@@ -477,7 +527,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$date->setTimezone ( new DateTimeZone ( 'Asia/Shanghai' ) );
 		$startTime = $date->format ( 'YmdHis' );
 		$input->SetTime_start ( $startTime );
-		$input->SetNotify_url (/*get_option('siteurl')*/$this->notify_url );
+		$input->SetNotify_url ($this->get_notify_url() );
+		// 		$input->SetNotify_url ( 'https://www.what2book.com.cn/wp-json/litchi/v1/wx/pay/notify' );
+
 
 		$input->SetTrade_type ( "NATIVE" );
 		$input->SetProduct_id ($order_id );
@@ -493,7 +545,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		   ||
 		   (isset($result['return_code'])&&$result['return_code']=='FAIL')){
 
-			$error_msg =  "return_msg:".$result['return_msg']." ;err_code_des: ".$result['err_code_des'];
+			$error_msg =  "return_msg:".$result['return_msg'].";notify_url:".($this->get_notify_url())." ;err_code_des: ".$result['err_code_des'];
 
 		}
 

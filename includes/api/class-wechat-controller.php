@@ -92,7 +92,8 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 			),
 		) );
 
-		// POST: /wp-json/litchi/v1/wx/pay/notify
+        // POST: /wp-json/litchi/v1/wx/pay/notify
+        // 由于通过微信支付网关处理支付，所以微信方不再使用此方式进行通知
 		register_rest_route( $this->namespace, '/' . $this->base . '/pay/notify', array(
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -182,12 +183,21 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 		$gateway = $payment_gateways['wxpay'];
 
 		$params = $request->get_params();
+		
+		$exchange_rate = floatval($gateway->get_option('exchange_rate'));
+		if($exchange_rate<=0){
+			$exchange_rate=1;
+		}
+		
+		$total = $params['total_fee'];
+		$total = round ($total * $exchange_rate, 2 );
+		$totalFee = ( int ) ($total * 100);
 
 		$order_info = array(
 			'body'             => $params['body'],//商品名
 			'out_trade_no'     => $params['out_trade_no'],//订单号
 			// 'total_fee'     => $need_info['price_total'] * 100,//价格，分
-			'total_fee'     => $params['total_fee'] * 100,
+			'total_fee'     => $totalFee,
 			// 'attach'         => $params['attach'],
 			'notify_url' => $gateway->get_option('wechatpay_notify_url')
 		);
