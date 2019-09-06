@@ -373,26 +373,39 @@ function wc_rest_user_endpoint_handler($request = null) {
 }
 
 
+function endereco( $current_user, $profile_info ) {
+        $billing_city = isset( $profile_info['billing_city'] ) ? $profile_info['billing_city'] : '';
+        $billing_postcode = isset( $profile_info['billing_postcode'] ) ? $profile_info['billing_postcode'] : '';
+        $billing_state = isset( $profile_info['billing_state'] ) ? $profile_info['billing_state'] : '';
+        $billing_address_1 = isset( $profile_info['billing_address_1'] ) ? $profile_info['billing_address_1'] : '';
+        ?>      
+        <div class="gregcustom dokan-form-group">
+            <label class="dokan-w3 dokan-control-label" for="setting_address">Testing Field</label>
+            <div class="dokan-w5">
+                        <input type="text" class="dokan-form-control input-md valid" name="billing_city" id="reg_billing_city" value="<?php echo $billing_city; ?>" />
+                </div>
+        </div>  
 
-/* Display additional shipping fields (email, phone) in USER area (i.e. Admin User/Customer display ) */
-/* Note:  $fields keys (i.e. field names) must be in format: shipping_ */
-add_filter( 'woocommerce_customer_meta_fields' , 'my_additional_customer_meta_fields' );
-function my_additional_customer_meta_fields( $fields ) {
-	$fields['shipping']['fields']['shipping_phone'] = array(
-		'label' => __( 'Phone', 'woocommerce' ),
-		'description' => '',
-	);
-	$fields['shipping']['fields']['shipping_email'] = array(
-		'label' => __( 'Email', 'woocommerce' ),
-		'description' => '',
-	);
-	$fields['contact'] = array(
-		'title'  => __( 'Customer contact information', 'woocommerce' ),
-		'fields' => array(
-			'Telephone' => array(
-				'label' => __( 'Phone', 'woocommerce' ),
-				'description' => '',
-			),
-		));
-	return $fields;
+        <div class="gregcustom dokan-form-group">
+                <label class="dokan-w3 dokan-control-label" for="setting_address"><?php _e( 'Estado', 'dokan' ); ?></label>
+                <div class="dokan-w5">
+                        <input type="text" class="dokan-form-control input-md valid" name="billing_postcode" id="reg_billing_postcode" value="<?php echo $billing_postcode; ?>" />
+                </div>
+        </div>
+
+        <div class="gregcustom dokan-form-group">
+                <label class="dokan-w3 dokan-control-label" for="setting_address"><?php _e( 'CEP', 'dokan' ); ?></label>
+                <div class="dokan-w5">
+                        <input type="text" class="dokan-form-control input-md valid" name="billing_state" id="reg_billing_state" value="<?php echo $billing_postcode; ?>" />
+                </div>
+        </div>    
+        <div class="gregcustom dokan-form-group">
+                <label class="dokan-w3 dokan-control-label" for="setting_address"><?php _e( 'Endereço', 'dokan' ); ?></label>
+                <div class="dokan-w5">
+                        <input type="text" class="dokan-form-control input-md valid" name="billing_address_1" id="reg_billing_address_1" value="<?php echo $billing_address_1; ?>" />
+                </div>
+        </div>
+
+        <?php
 }
+add_filter( 'dokan_store_profile_frame_after', 'endereco', 10, 2);

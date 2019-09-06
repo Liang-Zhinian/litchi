@@ -289,11 +289,13 @@ class Litchi_REST_Returngoods_Controller extends WP_REST_Controller
 
 	public function returngoods()
 	{
-
+		
 		$warrnty_requests = new Dokan_RMA_Warranty_Request();
 		$data           = [];
 		$pagination_html = '';
-		$item_per_page  = 20;
+
+
+		$item_per_page  = isset( $_GET['numpage'] ) ? abs( (int) $_GET['numpage'] ) : 10;
 		$total_count    = dokan_get_warranty_request( [ 'count' => true ] );
 		$page           = isset( $_GET['cpage'] ) ? abs( (int) $_GET['cpage'] ) : 1;
 		$offset         = ( $page * $item_per_page ) - $item_per_page;
@@ -303,11 +305,14 @@ class Litchi_REST_Returngoods_Controller extends WP_REST_Controller
 			$data['status'] = $_GET['status'];
 		}
 
-		$data['number']      = $item_per_page;
-		$data['offset']      = $offset;
 		$data['customer_id'] = $_GET['customer_id'];
 		$data['status'] = $_GET['status'];
 		$data['type'] = $_GET['type'];
+		$count=count($warrnty_requests->all( $data ));	
+		$data['number']      = $item_per_page;
+		$data['offset']      = $offset;
+		
+
 
 		if( $total_page > 1 ){
 			$pagination_html = '<div class="pagination-wrap">';
@@ -325,9 +330,10 @@ class Litchi_REST_Returngoods_Controller extends WP_REST_Controller
 			$pagination_html .= "</li>\n</ul>\n";
 			$pagination_html .= '</div>';
 		};
-		return $warrnty_requests->all( $data );
+		$datas['value'] = $warrnty_requests->all( $data );
+		$datas['count'] = $count;
 
-
+		return $datas;
 	}
 
 }

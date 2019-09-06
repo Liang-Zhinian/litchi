@@ -37,6 +37,10 @@ class Litchi_API_Manager {
 			$inc_dir . 'api/class-information-controller.php'                 => 'Litchi_REST_Information_Controller',
 			$inc_dir . 'api/class-returngoods-controller.php'                 => 'Litchi_REST_Returngoods_Controller',
 			$inc_dir . 'api/class-sms-controller.php'                 => 'Litchi_REST_Sms_Controller',
+			$inc_dir . 'api/class-exp-controller.php'                 => 'Litchi_REST_Exp_Controller',
+			$inc_dir . 'api/class-options-controller.php'                 => 'Litchi_REST_Options_Controller',
+			$inc_dir . 'api/class-expert-controller.php'                 => 'Litchi_REST_Expert_Controller',
+
 
 		) );
 

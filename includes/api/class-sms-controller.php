@@ -79,18 +79,18 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		) );
 
 
-		// POST: /wp-json/litchi/v1/sms/send-vercode
-		register_rest_route( $this->namespace, '/' . $this->base . '/send-vercode', array(
+		// POST: /wp-json/litchi/v1/sms/request-vercode
+		register_rest_route( $this->namespace, '/' . $this->base . '/request-vercode', array(
 			'methods'             => WP_REST_Server::CREATABLE,
-			'callback'            => array( $this, 'sendVerCode' ),
+			'callback'            => array( $this, 'requestVerCode' ),
 			'args' => array(
 				'mobile' => array(
 					'description' => __( 'mobile number', 'woocommerce' ),
 					'required' => true,
 					'type'     => 'string',
 				), 
-				'vercode' => array(
-					'description' => __( 'vercode', 'woocommerce' ),
+				'action' => array(
+					'description' => __( 'action', 'woocommerce' ),
 					'required' => true,
 					'type'     => 'string',
 				),
@@ -128,18 +128,18 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		) );
 
 		// POST: /wp-json/litchi/v1/sms/login
-			register_rest_route( $this->namespace, '/' . $this->base . '/login', array(
-				'methods' => WP_REST_Server::CREATABLE,
-				'callback'            => array( $this, 'login' ),
-				'args' => array(
-					'mobile' => array(
-						'description' => __( 'mobile number', 'woocommerce' ),
-						'required' => true,
-						'type'     => 'string',
-					), 
-				)
+		register_rest_route( $this->namespace, '/' . $this->base . '/login', array(
+			'methods' => WP_REST_Server::CREATABLE,
+			'callback'            => array( $this, 'login' ),
+			'args' => array(
+				'mobile' => array(
+					'description' => __( 'mobile number', 'woocommerce' ),
+					'required' => true,
+					'type'     => 'string',
+				), 
+			)
 
-			) );
+		) );
 
 	} // register_routes()
 
@@ -158,7 +158,7 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		$body = $request->get_json_params();                 
 		// 		return $body['mobile'];
 		$inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ; 
-		require_once $inc_dir. 'class-sms-sender.php';   
+		require_once $inc_dir. 'juhe/class-sms-sender.php'; 
 		$sms_sender = new Litchi_Sms_Sender();
 
 		$result = $sms_sender->sendMessage($body['mobile']);
@@ -177,21 +177,40 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 	 * @param   array $request
 	 * @return  WP_REST_Response
 	 */
-	public function sendVerCode( WP_REST_Request $request ) {
+	public function requestVerCode( WP_REST_Request $request ) {
 
 		$body = $request->get_json_params();                 
 		// 		return $body['mobile'];
 		$inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ; 
-		require_once $inc_dir. 'class-sms-sender.php';   
+		require_once $inc_dir. 'juhe/class-sms-sender.php';   
 		$sms_sender = new Litchi_Sms_Sender();
 
-		$result = $sms_sender->sendVerCode($body['mobile'], '181063', $body['vercode']);
+		$unique_no = substr(base_convert(md5(uniqid(md5(microtime(true)),true)), 16, 10), 0, 6);
 		
+		$result = null;
+		$action = $body['action'];
+		
+		// login: 181070, register: 181063
+		if ($action == 'register'){
+			$result = $sms_sender->sendVerCode($body['mobile'], '181063', $unique_no);
+		}else {
+			$result = $sms_sender->sendVerCode($body['mobile'], '181070', $unique_no);
+		}
 
 		return new WP_REST_Response( $result, 200 );
 	} // END sendVerCode()
 
 	public function get_users( WP_REST_Request $request ){
+		
+// 		$unique_no = substr(base_convert(md5(uniqid(md5(microtime(true)),true)), 16, 10), 0, 6);
+		$order_id = 3600;
+// 		$order = new WC_Order($order_id);
+		
+		$seller_ids = dokan_get_seller_ids_by($order_id);
+		$first_seller = new Dokan_Vendor($seller_ids[0]);
+// 		$first_seller               = dokan()->vendor->get( $seller_ids[0] );
+		return $first_seller -> get_phone();
+		return $first_seller;
 
 
 		$meta_key = "Telephone";
@@ -274,7 +293,7 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		$parameters = $request->get_json_params();
 		$mobile = sanitize_text_field($parameters['mobile']);
 		$vercode = sanitize_text_field($parameters['vercode']);
-		
+
 		// Expects social_id or user_email
 		if (empty($mobile)) {
 			return new WP_Error( 'rest_arguments_invalid', __( 'Expects mobile.' ), array( 'status' => 401 ) );
@@ -284,7 +303,7 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		}
 
 		$inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ; 
-		require_once $inc_dir. 'class-sms-sender.php';   
+		require_once $inc_dir. 'juhe/class-sms-sender.php';   
 		$sms_sender = new Litchi_Sms_Sender();
 		$sms = $sms_sender->get_sms_db($mobile, $vercode, 'vercode');
 
@@ -298,17 +317,38 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		if ( $diff > 4 ) {
 			return new WP_Error( 'authentication_failed', __( 'Expired vercode.', 'litchi' ), array( 'status' => 401 ) );
 		}
-			
+
 		$user = $this->get_user_by_mobile($mobile);
-		
-		if (!$user){
-			return new WP_Error( 'authentication_failed', __( 'Invalid mobile.', 'litchi' ), array( 'status' => 401 ) );
+
+		if (!$user || !($user->ID)) {
+			$random_password = wp_generate_password( $length = 12, $include_standard_special_chars = false );
+			$dummy_email = $mobile.'@invalid.com';
+			$username = 'user_'.$mobile;
+			$user_id = wp_create_user($username, $password, $dummy_email);
+			if (!is_wp_error($user_id)) {
+				// Ger User Meta Data (Sensitive, Password included. DO NOT pass to front end.)
+				$user = get_user_by('id', $user_id);
+				// $user->set_role($role);
+				$user->set_role('subscriber');
+				// WooCommerce specific code
+				if (class_exists('WooCommerce')) {
+					$user->set_role('customer');
+				}
+				
+				
+    			update_user_meta( $user_id, 'Telephone', $mobile );
+				
+				// Ger User Data (Non-Sensitive, Pass to front end.)
+				$response['code'] = 200;
+				$response['message'] = __("User '" . $username . "' Registration was Successful", "wp-rest-user");
+			} else {
+				return $user_id;
+			}
 		}
 
 		if (is_wp_error($user)) {
 			return $user;
 		}
-
 
 		wp_set_current_user( $user->ID, $user->user_login );
 		wp_set_auth_cookie( $user->ID );
@@ -335,7 +375,7 @@ class Litchi_REST_Sms_Controller extends WP_REST_Controller {
 		$response->set_data($return);
 		return $response;
 	}
-	
+
 	private function generateJWT($user) {
 
 		// generate & return jwt

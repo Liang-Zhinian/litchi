@@ -56,7 +56,7 @@ class Litchi {
 	 * @var      string    $version    The current version of the plugin.
 	 */
 	protected $version;
-	
+
 	/**
 	* Holds various class instances
 	*
@@ -64,7 +64,7 @@ class Litchi {
 	*
 	* @var array
 	*/
-   private $container = array();
+	private $container = array();
 
 	/**
 	 * Define the core functionality of the plugin.
@@ -81,7 +81,7 @@ class Litchi {
 		} else {
 			$this->version = '1.0.0';
 		}
-		
+
 		if ( defined( 'PLUGIN_NAME' ) ) {
 			$this->plugin_name = PLUGIN_NAME;
 		} else {
@@ -139,7 +139,7 @@ class Litchi {
 		/**
 		 * 
 		*/
-		
+
 		$inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) . 'includes/';
 
 		require_once $inc_dir . 'functions.php';
@@ -150,16 +150,16 @@ class Litchi {
 
 		// API includes
 		require_once $inc_dir . 'class-api-manager.php';
-		
+
 		require_once $inc_dir . 'class-wechat.php';
-		
+
 		require_once $inc_dir . 'class-social-db-init.php';
 
 		require_once $inc_dir . 'class-information-db-init.php';
 
-		require_once $inc_dir . 'class-sms-db-init.php';
+		require_once $inc_dir . 'juhe/class-sms-db-init.php';
 
-		
+		require_once $inc_dir . 'class-user-tokens-db-init.php';
 
 		$this -> init_classes() ;
 
@@ -176,7 +176,7 @@ class Litchi {
 		//$this->container['vendor']        = new Litchi_Vendor_Manager();
 		$this->container['api']           = new Litchi_API_Manager();
 
-		
+
 		$social_db = new social_db_init();
 		$social_db -> init();
 
@@ -186,6 +186,8 @@ class Litchi {
 		$sms_db = new sms_db_init();
 		$sms_db -> init();
 		
+		$user_tokens_db = new user_tokens_db_init();
+		$user_tokens_db -> init();
 	}
 
 	/**
@@ -219,7 +221,7 @@ class Litchi {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 
-		
+
 		$this->loader->add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), $plugin_admin, 'plugin_action_links' );
 
 	}

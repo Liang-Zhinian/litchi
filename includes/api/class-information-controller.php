@@ -72,7 +72,7 @@ class Litchi_REST_Information_Controller extends WP_REST_Controller
 
 
         register_rest_route($this->namespace, '/' . $this->base . '/create_information', array(
-            'methods' => WP_REST_Server::READABLE,
+            'methods' => WP_REST_Server::CREATABLE,
             'callback' => array($this, 'create_information'),
             'permission_callback' => array($this, 'create_information_permissions_check'),
             'args' => array()
@@ -90,20 +90,20 @@ class Litchi_REST_Information_Controller extends WP_REST_Controller
         $body = $request->get_json_params();
 
         global $wpdb;
-        $user_id=0;
+	if(empty($body['user_id'])){$user_id=0;}else{$user_id=$body['user_id'];}
         $eqno=$body['value']['DeviceInfo']['Serial'];
-        $action='action';
+        $action=$body['action'];
         $longitude=$body['value']['coords']['longitude'];
         $latitude=$body['value']['coords']['latitude'];
         $table = "wp_wp_api_information";
         $data_array = array(
-            'ip'=> $_SERVER["REMOTE_ADDR"],  //ip
+            'ip'=> $body['value']['ip'],  //ip
             'longitude'=>$longitude,  //经度
             'latitude'=>$latitude,  //纬度
             'eqno'=>$eqno,
             'action'=>$action,
             'wp_user_id'=>$user_id,
-            'created_time'=>time(),
+            'created_time'=>date("Y-m-d H:i:s")
         );
 
 

@@ -92,8 +92,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 			),
 		) );
 
-        // POST: /wp-json/litchi/v1/wx/pay/notify
-        // 由于通过微信支付网关处理支付，所以微信方不再使用此方式进行通知
+		// POST: /wp-json/litchi/v1/wx/pay/notify
 		register_rest_route( $this->namespace, '/' . $this->base . '/pay/notify', array(
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
@@ -129,6 +128,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 	} // register_routes()
 
 	public function notify(){                
+  		Logger::DEBUG(" sssssssssssssssssssssssssssssssssssssssssssssssss -> notify(): jsonxml => " );
 		Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify: start");          
 		//获取返回的xml         
 		$testxml  = file_get_contents("php://input");         
@@ -147,7 +147,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 				//进行改变订单状态等操作。。。。                   
 
 				$order = $this -> setOrderAsPaid($result);
-
+				
 				if ($order) {
 
 					Logger::DEBUG(" Litchi_REST_WeChat_Controller -> notify(): ORDER PAID");
@@ -177,6 +177,7 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 	 * @return  WP_REST_Response
 	 */
 	public function unifiedorder( $request = array() ) {
+		Logger::DEBUG( 'Litchi_REST_WeChat_Controller -> unifiedorder start ...' );
 
 		$gateway = null;
 		$payment_gateways = WC()->payment_gateways->payment_gateways();
@@ -234,11 +235,11 @@ class Litchi_REST_WeChat_Controller extends WP_REST_Controller {
 
 		$result = WxPayApi::orderQuery($input, $config);
 
-        if ($result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS') {
-            if ($result['trade_state'] == 'SUCCESS') { 
-                $this -> setOrderAsPaid($result);
-            }
-        }
+		if ($result['return_code'] == 'SUCCESS' && $result['result_code'] == 'SUCCESS') {
+			if ($result['trade_state'] == 'SUCCESS') { 
+				$this -> setOrderAsPaid($result);
+			}
+		}
 
 		return $result;
 	}

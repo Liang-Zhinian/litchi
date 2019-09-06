@@ -109,6 +109,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 
 
 		// approve refund request automatically such as stripe connect
+		// 当商家提交退款申请时
 		add_action( 'dokan_after_refund_request', [ $this, 'dokan_process_refund_request' ], 10, 2);
 		//       add_action( 'wp_ajax_nopriv_dokan_refund_request', array( $this, 'dokan_refund_request') );
 	}
@@ -393,6 +394,8 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		}
 	}
 
+	
+
 	function update_refund_request_method( $refund_request_id, $method = 'false' ) {
         global $wpdb;
 
@@ -402,7 +405,6 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
             $method, $refund_request_id
         ) );
     }
-
 
 	public function dokan_process_refund_request( $refund_id, $data ) {
 		Logger::DEBUG(" Litchi -> dokan_process_refund_request: " . $refund_id);
@@ -500,6 +502,7 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		return $this->get_option('wechatpay_notify_url');
 	}
 
+	// 设置客户支付页面，生成微信二维码
 	function receipt_page($order_id) {
 		$order = new WC_Order($order_id);
 		if(!$order||$order->is_paid()){
@@ -552,11 +555,12 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 		$url =isset($result['code_url'])? $result ["code_url"]:'';
 
 		echo  '<input type="hidden" id="litchi-wechat-payment-pay-url" value="'.$url.'"/>';
-
+	// 如果要启用扫码支付，把下面的display: none;改成display: block;
 ?>
+		
 <style type="text/css">
 
-	.pay-weixin-design{ display: block;background: #fff;/*padding:100px;*/overflow: hidden;}
+	.pay-weixin-design{ display: none;background: #fff;/*padding:100px;*/overflow: hidden;}
 	.page-wrap {padding: 50px 0;min-height: auto !important;  }
 	.pay-weixin-design #WxQRCode{width:196px;height:auto}
 	.pay-weixin-design .p-w-center{ display: block;overflow: hidden;margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #eee;}
@@ -601,9 +605,9 @@ class Litchi_WeChat_Payment_Gateway extends WC_Payment_Gateway {
 
 </div>
 
+
 <?php 
 	}
-
 }
 
 ?>

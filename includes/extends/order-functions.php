@@ -398,6 +398,28 @@ function my_additional_admin_shipping_fields( $fields ) {
 	);
 	return $fields;
 }
+/* Display additional shipping fields (email, phone) in USER area (i.e. Admin User/Customer display ) */
+/* Note:  $fields keys (i.e. field names) must be in format: shipping_ */
+add_filter( 'woocommerce_customer_meta_fields' , 'my_additional_customer_meta_fields' );
+function my_additional_customer_meta_fields( $fields ) {
+	$fields['shipping']['fields']['shipping_phone'] = array(
+		'label' => __( 'Phone', 'woocommerce' ),
+		'description' => '',
+	);
+	$fields['shipping']['fields']['shipping_email'] = array(
+		'label' => __( 'Email', 'woocommerce' ),
+		'description' => '',
+	);
+	$fields['contact'] = array(
+		'title'  => __( 'Customer contact information', 'woocommerce' ),
+		'fields' => array(
+			'Telephone' => array(
+				'label' => __( 'Phone', 'woocommerce' ),
+				'description' => '',
+			),
+		));
+	return $fields;
+}
 /* Add CSS for ADMIN area so that the additional shipping fields (email, phone) display on left and right side of edit shipping details */
 add_action('admin_head', 'my_custom_admin_css');
 function my_custom_admin_css() {
@@ -621,7 +643,28 @@ function when_order_status_hold($order_id) {
 }
 function when_order_status_processing($order_id) {
 	write_log("$order_id set to PROCESSING");
+
+	$seller_ids = dokan_get_seller_ids_by($order_id);
+	            foreach ($seller_ids as $k=>$v){
+                        $vendor = new Dokan_Vendor($v);
+                        $mobile=$vendor->get_phone();
+
+
+			$vendor = new Dokan_Vendor($v);
+			$mobile= $vendor -> get_phone();
+
+                        //向商家提醒发货
+                        $inc_dir     = plugin_dir_path( dirname( __FILE__ ) ) ;
+                        require_once $inc_dir. 'juhe/class-sms-sender.php';
+                        $sms_sender = new Litchi_Sms_Sender();
+
+                        $result = $sms_sender->sendMessage($mobile,'181065');
+                        sleep(3);
+                    }
+
 }
+
+
 function when_order_status_completed($order_id) {
 	write_log("$order_id set to COMPLETED");
 
@@ -670,6 +713,7 @@ add_action( 'woocommerce_order_status_cancelled', 'when_order_status_cancelled',
 
 function when_payment_complete( $order_id ) {
 	error_log( "Payment has been received for order $order_id" );
+  
 }
 add_action( 'woocommerce_payment_complete', 'when_payment_complete', 10, 1 );
 

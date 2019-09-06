@@ -59,6 +59,8 @@ class WxPayApi
 		$startTimeStamp = self::getMillisecond();//请求开始时间
 		$response = self::postXmlCurl($xml, $url, false, $timeOut,$WxCfg);
 		$result = WxPayResults::Init($response,$WxCfg);
+		
+			Logger::DEBUG($xml);
 		self::reportCostTime($url, $startTimeStamp, $result,$WxCfg);//上报请求花费时间
 		
 		return $result;
@@ -282,6 +284,7 @@ class WxPayApi
 		if($useCert == true){
 			//设置证书
 			//使用证书：cert 与 key 分别属于两个.pem文件
+			
 			curl_setopt($ch,CURLOPT_SSLCERTTYPE,'PEM');
 			curl_setopt($ch,CURLOPT_SSLCERT, $WxCfg->getSSLCERTPATH());
 			curl_setopt($ch,CURLOPT_SSLKEYTYPE,'PEM');
@@ -299,8 +302,8 @@ class WxPayApi
 		} else {
 			$error = curl_error($ch);
 			curl_close($ch);
-
-			throw new WxPayException("curl出错, url:$url, 错误码:$error");
+			$cert_path = $WxCfg->getSSLCERTPATH();
+			throw new WxPayException("curl出错, url:$url, cert_path:$cert_path, 错误码:$error");
 		}
 	}
 	
